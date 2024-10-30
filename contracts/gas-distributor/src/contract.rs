@@ -156,9 +156,8 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
             .querier
             .query_balance(address.clone(), "untrn".to_string())?
             .amount;
-        let delta = current_balance - update_options.target_balance;
-        if delta.lt(&Uint128::zero()) {
-            let abs_delta = delta.abs_diff(Uint128::zero());
+        if current_balance < update_options.target_balance {
+            let abs_delta = current_balance.abs_diff(update_options.target_balance);
             let funds_to_send = match update_options.update_value {
                 Some(_) => abs_delta + update_options.update_value.unwrap(),
                 None => abs_delta,

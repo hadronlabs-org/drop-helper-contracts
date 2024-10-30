@@ -1,4 +1,7 @@
-use cosmwasm_std::{attr, entry_point, Binary, DepsMut, Env, Event, MessageInfo, Response};
+use cosmwasm_std::{
+    attr, entry_point, to_json_binary, Addr, Binary, DepsMut, Env, Event, MessageInfo, Order,
+    Response,
+};
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
     msg::gas_distributor::{ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance},
@@ -42,12 +45,28 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(
-    _deps: DepsMut,
+    deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
-    _msg: QueryMsg,
-) -> Result<Response, Binary> {
-    unimplemented!()
+    msg: QueryMsg,
+) -> Result<Binary, ContractError> {
+    Ok(match msg {
+        QueryMsg::TargetBalances() => to_json_binary(&query_target_balances(deps)).unwrap(),
+    })
+}
+
+fn query_target_balances(deps: DepsMut) -> Vec<TargetBalance> {
+    CURRENT_BALANCES
+        .range(deps.storage, None, None, Order::Ascending)
+        .into_iter()
+        .map(|item| {
+            let (key, value) = item.unwrap();
+            TargetBalance {
+                address: Addr::unchecked(key),
+                target_balance: value,
+            }
+        })
+        .collect()
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

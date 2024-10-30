@@ -192,7 +192,11 @@ fn execute_remove_target_balances(
 fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, ContractError> {
     let mut attrs = vec![];
     let mut messages = vec![];
-    let mut total_funds_required = 0u128;
+    let mut contract_balance = deps
+        .querier
+        .query_balance(env.contract.address, UNTRN_DENOM.to_string())?
+        .amount;
+
     for item in TARGET_BALANCES.range(deps.storage, None, None, Order::Ascending) {
         let (address, target_balance) = item.unwrap();
         let current_balance = deps
@@ -205,24 +209,20 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
                 Some(_) => abs_delta + target_balance.update_options.update_value.unwrap(),
                 None => abs_delta,
             };
-            messages.push(CosmosMsg::Bank(BankMsg::Send {
-                to_address: address.clone(),
-                amount: vec![Coin {
-                    denom: UNTRN_DENOM.to_string(),
-                    amount: funds_to_send,
-                }],
-            }));
+            if contract_balance.checked_sub(funds_to_send).is_ok() {
+                messages.push(CosmosMsg::Bank(BankMsg::Send {
+                    to_address: address.clone(),
+                    amount: vec![Coin {
+                        denom: UNTRN_DENOM.to_string(),
+                        amount: funds_to_send,
+                    }],
+                }));
+                contract_balance = contract_balance.abs_diff(funds_to_send);
+            } else {
+                break;
+            }
             attrs.push(attr(address, funds_to_send));
-            total_funds_required += funds_to_send.u128();
         }
-    }
-    let contract_balance = deps
-        .querier
-        .query_balance(env.contract.address, UNTRN_DENOM.to_string())?
-        .amount
-        .u128();
-    if total_funds_required > contract_balance {
-        return Err(ContractError::InsufficientFunds {});
     }
     Ok(response("execute-distribute", CONTRACT_NAME, attrs).add_messages(messages))
 }

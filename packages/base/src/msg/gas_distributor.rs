@@ -1,6 +1,6 @@
 use crate::state::gas_distributor::TargetBalanceUpdateParams;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint128};
 use cw_ownable::cw_ownable_execute;
 
 #[cw_serde]
@@ -33,6 +33,14 @@ pub enum QueryMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     Distribute {},
-    AddTargetBalances { target_balances: Vec<TargetBalance> },
-    RemoveTargetBalances { target_balances: Vec<Addr> },
+    WithdrawTokens {
+        recepient: Option<String>,
+        amount: Option<Uint128>,
+    },
+    AddTargetBalances {
+        target_balances: Vec<TargetBalance>,
+    },
+    RemoveTargetBalances {
+        target_balances: Vec<Addr>,
+    },
 }

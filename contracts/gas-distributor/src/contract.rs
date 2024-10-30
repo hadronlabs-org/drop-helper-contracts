@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     attr, entry_point, to_json_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
-    Event, MessageInfo, Order, Response,
+    Event, MessageInfo, Order, Response, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
@@ -101,7 +101,42 @@ pub fn execute(
         ExecuteMsg::RemoveTargetBalances { target_balances } => {
             execute_remove_target_balances(deps, info, target_balances)
         }
+        ExecuteMsg::WithdrawTokens { recepient, amount } => {
+            execute_withdraw_tokens(deps, info, env, amount, recepient)
+        }
     }
+}
+
+fn execute_withdraw_tokens(
+    deps: DepsMut,
+    info: MessageInfo,
+    env: Env,
+    amount: Option<Uint128>,
+    mut recepient: Option<String>,
+) -> Result<Response<NeutronMsg>, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender).unwrap();
+    let contract_balance = deps
+        .querier
+        .query_balance(env.contract.address, "untrn".to_string())
+        .unwrap()
+        .amount;
+    let amount_to_send = match amount {
+        Some(a) => a,
+        None => contract_balance,
+    };
+    if amount_to_send > contract_balance {
+        return Err(ContractError::InsufficientFunds);
+    }
+    if recepient.is_none() {
+        recepient = Some(info.sender.to_string());
+    }
+    Ok(Response::new().add_message(CosmosMsg::Bank(BankMsg::Send {
+        to_address: recepient.unwrap(),
+        amount: vec![Coin {
+            denom: "untrn".to_string(),
+            amount: amount_to_send,
+        }],
+    })))
 }
 
 fn execute_add_target_balances(

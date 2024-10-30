@@ -123,7 +123,7 @@ fn execute_withdraw_tokens(
     amount: Option<Uint128>,
     mut recepient: Option<String>,
 ) -> Result<Response<NeutronMsg>, ContractError> {
-    cw_ownable::assert_owner(deps.storage, &info.sender).unwrap();
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
     let contract_balance = deps
         .querier
         .query_balance(env.contract.address, "untrn".to_string())
@@ -158,7 +158,7 @@ fn execute_add_target_balances(
     info: MessageInfo,
     target_balances: Vec<TargetBalance>,
 ) -> Result<Response<NeutronMsg>, ContractError> {
-    cw_ownable::assert_owner(deps.storage, &info.sender).unwrap();
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
     let mut attrs = vec![];
     target_balances.into_iter().for_each(|target_balance| {
         deps.api
@@ -185,7 +185,7 @@ fn execute_remove_target_balances(
     info: MessageInfo,
     target_balances: Vec<Addr>,
 ) -> Result<Response<NeutronMsg>, ContractError> {
-    cw_ownable::assert_owner(deps.storage, &info.sender).unwrap();
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
     let mut attrs = vec![];
     for addr in target_balances {
         if TARGET_BALANCES.has(deps.storage, addr.to_string()) {

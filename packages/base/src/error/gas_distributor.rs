@@ -5,4 +5,6 @@ use thiserror::Error;
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
+    #[error("Contract doesn't have enough funds")]
+    InsufficientFunds,
 }

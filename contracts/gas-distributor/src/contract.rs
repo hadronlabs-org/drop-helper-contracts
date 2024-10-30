@@ -76,18 +76,19 @@ fn query_target_balances(deps: Deps) -> Vec<TargetBalance> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     _info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response<NeutronMsg>, ContractError> {
     match msg {
-        ExecuteMsg::Distribute {} => execute_distribute(deps),
+        ExecuteMsg::Distribute {} => execute_distribute(env, deps),
     }
 }
 
-fn execute_distribute(deps: DepsMut) -> Result<Response<NeutronMsg>, ContractError> {
+fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, ContractError> {
     let mut attrs = vec![];
     let mut messages = vec![];
+    let mut total_funds_required = 0u128;
     for item in TARGET_BALANCES.range(deps.storage, None, None, Order::Ascending) {
         let (address, target_balance) = item.unwrap();
         let current_balance = deps
@@ -104,8 +105,17 @@ fn execute_distribute(deps: DepsMut) -> Result<Response<NeutronMsg>, ContractErr
                     amount: abs_delta,
                 }],
             }));
-            attrs.push(attr(address, abs_delta))
+            attrs.push(attr(address, abs_delta));
+            total_funds_required += abs_delta.u128();
         }
+    }
+    let contract_balance = deps
+        .querier
+        .query_balance(env.contract.address, "untrn".to_string())?
+        .amount
+        .u128();
+    if total_funds_required > contract_balance {
+        return Err(ContractError::InsufficientFunds {});
     }
     Ok(Response::new()
         .add_event(Event::new("execute_distribute").add_attributes(attrs))

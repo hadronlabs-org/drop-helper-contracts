@@ -19,6 +19,7 @@ library = []
 
 [dependencies]
 cw2 = { workspace = true }
+neutron-sdk = { workspace = true }
 cosmwasm-schema = { workspace = true }
 cosmwasm-std = { workspace = true }
 cw-ownable = { workspace = true }

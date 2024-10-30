@@ -26,4 +26,6 @@ pub enum QueryMsg {
 }
 
 #[cw_serde]
-pub enum ExecuteMsg {}
+pub enum ExecuteMsg {
+    Distribute {},
+}

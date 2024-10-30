@@ -51,6 +51,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
         QueryMsg::TargetBalance { address } => {
             to_json_binary(&query_target_balance(deps, address)).unwrap()
         }
+        QueryMsg::Owner {} => to_json_binary(
+            &cw_ownable::get_ownership(deps.storage)?
+                .owner
+                .unwrap_or(Addr::unchecked(""))
+                .to_string(),
+        )?,
     })
 }
 
@@ -77,24 +83,30 @@ fn query_target_balances(deps: Deps) -> Vec<TargetBalance> {
 pub fn execute(
     deps: DepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response<NeutronMsg>, ContractError> {
     match msg {
+        ExecuteMsg::UpdateOwnership(action) => {
+            cw_ownable::update_ownership(deps.into_empty(), &env.block, &info.sender, action)?;
+            Ok(Response::new().add_event(Event::new("execute-update-ownership")))
+        }
         ExecuteMsg::Distribute {} => execute_distribute(env, deps),
         ExecuteMsg::AddTargetBalances { target_balances } => {
-            execute_add_target_balances(deps, target_balances)
+            execute_add_target_balances(deps, info, target_balances)
         }
         ExecuteMsg::RemoveTargetBalances { target_balances } => {
-            execute_remove_target_balances(deps, target_balances)
+            execute_remove_target_balances(deps, info, target_balances)
         }
     }
 }
 
 fn execute_add_target_balances(
     deps: DepsMut,
+    info: MessageInfo,
     target_balances: Vec<TargetBalance>,
 ) -> Result<Response<NeutronMsg>, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender).unwrap();
     let mut attrs = vec![];
     target_balances.into_iter().for_each(|item| {
         TARGET_BALANCES
@@ -107,8 +119,10 @@ fn execute_add_target_balances(
 
 fn execute_remove_target_balances(
     deps: DepsMut,
+    info: MessageInfo,
     target_balances: Vec<Addr>,
 ) -> Result<Response<NeutronMsg>, ContractError> {
+    cw_ownable::assert_owner(deps.storage, &info.sender).unwrap();
     let mut attrs = vec![];
     for addr in target_balances {
         if TARGET_BALANCES.has(deps.storage, addr.to_string()) {

@@ -1,5 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
+use cw_ownable::cw_ownable_execute;
 
 #[cw_serde]
 pub struct TargetBalance {
@@ -23,8 +24,11 @@ pub enum QueryMsg {
     TargetBalances {},
     #[returns(Uint128)]
     TargetBalance { address: Addr },
+    #[returns(String)]
+    Owner {},
 }
 
+#[cw_ownable_execute]
 #[cw_serde]
 pub enum ExecuteMsg {
     Distribute {},

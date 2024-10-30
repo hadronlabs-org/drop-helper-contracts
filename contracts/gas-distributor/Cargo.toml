@@ -1,0 +1,28 @@
+[package]
+authors = ["Vladislav Vasilev <vfaust.thefuture@gmail.com>"]
+description = "Contract to send funds where they're in shortage"
+edition = "2021"
+name = "drop-gas-distributor"
+version = "1.0.0"
+
+exclude = [
+    "contract.wasm",
+    "hash.txt",
+]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+backtraces = ["cosmwasm-std/backtraces"]
+library = []
+
+[dependencies]
+cw2 = { workspace = true }
+cosmwasm-schema = { workspace = true }
+cosmwasm-std = { workspace = true }
+cw-ownable = { workspace = true }
+thiserror = { workspace = true }
+cw-multi-test = { workspace = true }
+cw-utils = { workspace = true }
+cw-storage-plus = { workspace = true }

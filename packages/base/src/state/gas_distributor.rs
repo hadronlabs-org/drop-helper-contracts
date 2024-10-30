@@ -8,5 +8,5 @@ pub struct TargetBalanceUpdateParams {
     pub update_value: Option<Uint128>,
 }
 
-pub static UNTRN_DENOM: &'static str = "untrn";
+pub static UNTRN_DENOM: &str = "untrn";
 pub const TARGET_BALANCES: Map<String, TargetBalanceUpdateParams> = Map::new("target_balances");

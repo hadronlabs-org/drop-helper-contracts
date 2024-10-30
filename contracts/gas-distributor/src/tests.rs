@@ -2,7 +2,7 @@ use crate::contract::{execute, instantiate, query};
 use cosmwasm_std::{
     attr, from_json,
     testing::{mock_env, mock_info},
-    Addr, BankMsg, Event, Never, Order, Response, SubMsg, Uint128,
+    Addr, BankMsg, Event, Order, Response, SubMsg, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,

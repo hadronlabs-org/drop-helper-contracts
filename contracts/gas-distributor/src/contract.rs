@@ -53,10 +53,8 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     Ok(match msg {
-        QueryMsg::TargetBalances {} => to_json_binary(&query_target_balances(deps)).unwrap(),
-        QueryMsg::TargetBalance { address } => {
-            to_json_binary(&query_target_balance(deps, address)).unwrap()
-        }
+        QueryMsg::TargetBalances {} => query_target_balances(deps)?,
+        QueryMsg::TargetBalance { address } => query_target_balance(deps, address)?,
         QueryMsg::Owner {} => to_json_binary(
             &cw_ownable::get_ownership(deps.storage)?
                 .owner
@@ -66,23 +64,27 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
     })
 }
 
-fn query_target_balance(deps: Deps, address: Addr) -> TargetBalanceUpdateParams {
-    TARGET_BALANCES
-        .load(deps.storage, address.to_string())
-        .unwrap()
+fn query_target_balance(deps: Deps, address: Addr) -> Result<Binary, ContractError> {
+    match TARGET_BALANCES.load(deps.storage, address.to_string()) {
+        Ok(value) => Ok(to_json_binary(&value).unwrap()),
+        Err(_) => Err(ContractError::UnknownTargetBalance {}),
+    }
 }
 
-fn query_target_balances(deps: Deps) -> Vec<TargetBalance> {
-    TARGET_BALANCES
-        .range(deps.storage, None, None, Order::Ascending)
-        .map(|item| {
-            let (key, value) = item.unwrap();
-            TargetBalance {
-                address: Addr::unchecked(key),
-                update_options: value,
-            }
-        })
-        .collect()
+fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {
+    Ok(to_json_binary(
+        &TARGET_BALANCES
+            .range(deps.storage, None, None, Order::Ascending)
+            .map(|item| {
+                let (key, value) = item.unwrap();
+                TargetBalance {
+                    address: Addr::unchecked(key),
+                    update_options: value,
+                }
+            })
+            .collect::<Vec<TargetBalance>>(),
+    )
+    .unwrap())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

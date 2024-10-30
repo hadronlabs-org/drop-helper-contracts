@@ -43,10 +43,10 @@ fn test_instantiate() {
 
     assert_eq!(
         response,
-        Response::new().add_event(
-            Event::new("instantiate")
-                .add_attributes(vec![attr("address1", "123"), attr("address2", "321")])
-        )
+        Response::new().add_event(Event::new("instantiate").add_attributes(vec![
+            attr("add_target_balance", "address1"),
+            attr("add_target_balance", "address2")
+        ]))
     );
 
     let res: Vec<TargetBalance> = from_json(

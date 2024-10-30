@@ -5,7 +5,7 @@ use cosmwasm_std::{
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
     msg::gas_distributor::{ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance},
-    state::gas_distributor::TARGET_BALANCES,
+    state::gas_distributor::{TARGET_BALANCES, UNTRN_DENOM},
 };
 use drop_helper_contracts_helpers::answer::response;
 use neutron_sdk::bindings::msg::NeutronMsg;
@@ -119,7 +119,7 @@ fn execute_withdraw_tokens(
     cw_ownable::assert_owner(deps.storage, &info.sender)?;
     let contract_balance = deps
         .querier
-        .query_balance(env.contract.address, "untrn".to_string())
+        .query_balance(env.contract.address, UNTRN_DENOM.to_string())
         .unwrap()
         .amount;
     let amount_to_send = amount.unwrap_or(contract_balance);
@@ -137,7 +137,7 @@ fn execute_withdraw_tokens(
     .add_message(CosmosMsg::Bank(BankMsg::Send {
         to_address: recepient.unwrap(),
         amount: vec![Coin {
-            denom: "untrn".to_string(),
+            denom: UNTRN_DENOM.to_string(),
             amount: amount_to_send,
         }],
     })))
@@ -200,7 +200,7 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
         let (address, update_options) = target_balance.unwrap();
         let current_balance = deps
             .querier
-            .query_balance(address.clone(), "untrn".to_string())?
+            .query_balance(address.clone(), UNTRN_DENOM.to_string())?
             .amount;
         if current_balance < update_options.target_balance {
             let abs_delta = current_balance.abs_diff(update_options.target_balance);
@@ -211,7 +211,7 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
             messages.push(CosmosMsg::Bank(BankMsg::Send {
                 to_address: address.clone(),
                 amount: vec![Coin {
-                    denom: "untrn".to_string(),
+                    denom: UNTRN_DENOM.to_string(),
                     amount: funds_to_send,
                 }],
             }));
@@ -221,7 +221,7 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
     }
     let contract_balance = deps
         .querier
-        .query_balance(env.contract.address, "untrn".to_string())?
+        .query_balance(env.contract.address, UNTRN_DENOM.to_string())?
         .amount
         .u128();
     if total_funds_required > contract_balance {

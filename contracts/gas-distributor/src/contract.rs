@@ -104,7 +104,7 @@ fn execute_distribute(deps: DepsMut) -> Result<Response<NeutronMsg>, ContractErr
                     amount: abs_delta,
                 }],
             }));
-            attrs.push(attr(address.clone(), abs_delta))
+            attrs.push(attr(address, abs_delta))
         }
     }
     Ok(Response::new()

@@ -29,6 +29,9 @@ pub fn instantiate(
     msg.initial_target_balances
         .iter()
         .for_each(|target_balance: &TargetBalance| {
+            deps.api
+                .addr_validate(target_balance.address.as_str())
+                .unwrap();
             TARGET_BALANCES
                 .save(
                     deps.storage,
@@ -109,6 +112,7 @@ fn execute_add_target_balances(
     cw_ownable::assert_owner(deps.storage, &info.sender).unwrap();
     let mut attrs = vec![];
     target_balances.into_iter().for_each(|item| {
+        deps.api.addr_validate(item.address.as_str()).unwrap();
         TARGET_BALANCES
             .save(deps.storage, item.address.to_string(), &item.target_balance)
             .unwrap();

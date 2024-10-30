@@ -21,6 +21,8 @@ pub struct MigrateMsg {}
 pub enum QueryMsg {
     #[returns(Vec<TargetBalance>)]
     TargetBalances(),
+    #[returns(Uint128)]
+    TargetBalance { address: Addr },
 }
 
 #[cw_serde]

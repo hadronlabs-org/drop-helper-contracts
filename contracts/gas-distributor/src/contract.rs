@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     attr, entry_point, to_json_binary, Addr, Binary, DepsMut, Env, Event, MessageInfo, Order,
-    Response,
+    Response, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
@@ -52,7 +52,16 @@ pub fn query(
 ) -> Result<Binary, ContractError> {
     Ok(match msg {
         QueryMsg::TargetBalances() => to_json_binary(&query_target_balances(deps)).unwrap(),
+        QueryMsg::TargetBalance { address } => {
+            to_json_binary(&query_target_balance(deps, address)).unwrap()
+        }
     })
+}
+
+fn query_target_balance(deps: DepsMut, address: Addr) -> Uint128 {
+    CURRENT_BALANCES
+        .load(deps.storage, address.to_string())
+        .unwrap()
 }
 
 fn query_target_balances(deps: DepsMut) -> Vec<TargetBalance> {

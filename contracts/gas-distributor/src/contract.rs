@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     attr, entry_point, to_json_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps,
-    DepsMut, Env, Event, MessageInfo, Order, Response, Uint128,
+    DepsMut, Env, MessageInfo, Order, Response, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,

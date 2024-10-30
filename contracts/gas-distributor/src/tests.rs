@@ -2,7 +2,7 @@ use crate::contract::{execute, instantiate, query};
 use cosmwasm_std::{
     attr, from_json,
     testing::{mock_env, mock_info},
-    Addr, Event, Order, Response, Uint128,
+    Addr, BankMsg, Event, Never, Order, Response, SubMsg, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
@@ -464,6 +464,159 @@ fn test_execute_add_target_balances() {
         )
         .collect::<Vec<TargetBalance>>();
     assert_eq!(target_balances_list, expected_target_balances)
+}
+
+#[test]
+fn test_execute_withdraw_tokens_unauthorized() {
+    let mut deps = mock_dependencies(&[]);
+    let deps_mut = deps.as_mut();
+    cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
+    let execute_res = execute(
+        deps_mut.into_empty(),
+        mock_env(),
+        mock_info("somebody", &[]),
+        ExecuteMsg::WithdrawTokens {
+            recepient: None,
+            amount: None,
+        },
+    )
+    .unwrap_err();
+    assert_eq!(
+        execute_res,
+        ContractError::OwnershipError(cw_ownable::OwnershipError::NotOwner)
+    );
+}
+
+#[test]
+fn test_execute_withdraw_tokens_unauthorized_custom_recepient() {
+    let mut deps = mock_dependencies(&[]);
+    let deps_mut = deps.as_mut();
+    cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
+    let execute_res = execute(
+        deps_mut.into_empty(),
+        mock_env(),
+        mock_info("owner", &[]),
+        ExecuteMsg::WithdrawTokens {
+            recepient: Some("recepient".to_string()),
+            amount: None,
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        execute_res,
+        Response::new()
+            .add_submessage(SubMsg {
+                id: 0,
+                msg: cosmwasm_std::CosmosMsg::Bank(BankMsg::Send {
+                    to_address: "recepient".to_string(),
+                    amount: vec![cosmwasm_std::Coin {
+                        denom: "untrn".to_string(),
+                        amount: Uint128::from(0_u128)
+                    }]
+                }),
+                gas_limit: None,
+                reply_on: cosmwasm_std::ReplyOn::Never
+            })
+            .add_event(Event::new(
+                "crates.io:drop-helper__drop-gas-distributor-execute-withdraw-tokens"
+            ))
+    );
+}
+
+#[test]
+fn test_execute_withdraw_tokens_unauthorized_custom_amount_insufficient_funds() {
+    let mut deps = mock_dependencies(&[]);
+    let deps_mut = deps.as_mut();
+    cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
+    let execute_res = execute(
+        deps_mut.into_empty(),
+        mock_env(),
+        mock_info("owner", &[]),
+        ExecuteMsg::WithdrawTokens {
+            recepient: Some("recepient".to_string()),
+            amount: Some(Uint128::from(123_u128)),
+        },
+    )
+    .unwrap_err();
+    assert_eq!(execute_res, ContractError::InsufficientFunds {});
+}
+
+#[test]
+fn test_execute_withdraw_tokens_unauthorized_custom_amount() {
+    let mut deps = mock_dependencies(&[cosmwasm_std::Coin {
+        denom: "untrn".to_string(),
+        amount: Uint128::from(123_u128),
+    }]);
+    let deps_mut = deps.as_mut();
+    cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
+    let execute_res = execute(
+        deps_mut.into_empty(),
+        mock_env(),
+        mock_info("owner", &[]),
+        ExecuteMsg::WithdrawTokens {
+            recepient: None,
+            amount: Some(Uint128::from(123_u128)),
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        execute_res,
+        Response::new()
+            .add_submessage(SubMsg {
+                id: 0,
+                msg: cosmwasm_std::CosmosMsg::Bank(BankMsg::Send {
+                    to_address: "owner".to_string(),
+                    amount: vec![cosmwasm_std::Coin {
+                        denom: "untrn".to_string(),
+                        amount: Uint128::from(123_u128)
+                    }]
+                }),
+                gas_limit: None,
+                reply_on: cosmwasm_std::ReplyOn::Never
+            })
+            .add_event(Event::new(
+                "crates.io:drop-helper__drop-gas-distributor-execute-withdraw-tokens"
+            ))
+    );
+}
+
+#[test]
+fn test_execute_withdraw_tokens_unauthorized_custom_amount_and_recepient() {
+    let mut deps = mock_dependencies(&[cosmwasm_std::Coin {
+        denom: "untrn".to_string(),
+        amount: Uint128::from(123_u128),
+    }]);
+    let deps_mut = deps.as_mut();
+    cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
+    let execute_res = execute(
+        deps_mut.into_empty(),
+        mock_env(),
+        mock_info("owner", &[]),
+        ExecuteMsg::WithdrawTokens {
+            recepient: Some("recepient".to_string()),
+            amount: Some(Uint128::from(123_u128)),
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        execute_res,
+        Response::new()
+            .add_submessage(SubMsg {
+                id: 0,
+                msg: cosmwasm_std::CosmosMsg::Bank(BankMsg::Send {
+                    to_address: "recepient".to_string(),
+                    amount: vec![cosmwasm_std::Coin {
+                        denom: "untrn".to_string(),
+                        amount: Uint128::from(123_u128)
+                    }]
+                }),
+                gas_limit: None,
+                reply_on: cosmwasm_std::ReplyOn::Never
+            })
+            .add_event(Event::new(
+                "crates.io:drop-helper__drop-gas-distributor-execute-withdraw-tokens"
+            ))
+    );
 }
 
 #[test]

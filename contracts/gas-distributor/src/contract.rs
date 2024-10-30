@@ -68,10 +68,12 @@ fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {
     Ok(to_json_binary(
         &TARGET_BALANCES
             .range(deps.storage, None, None, Order::Ascending)
-            .map(|item| {
-                let (_, update_options) = item.unwrap();
-                update_options
-            })
+            .map(
+                |item: Result<(String, TargetBalance), cosmwasm_std::StdError>| {
+                    let (_, target_balance) = item.unwrap();
+                    target_balance
+                },
+            )
             .collect::<Vec<TargetBalance>>(),
     )
     .unwrap())

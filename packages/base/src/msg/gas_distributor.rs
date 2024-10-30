@@ -28,4 +28,6 @@ pub enum QueryMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     Distribute {},
+    AddTargetBalances { target_balances: Vec<TargetBalance> },
+    RemoveTargetBalances { target_balances: Vec<Addr> },
 }

@@ -82,7 +82,44 @@ pub fn execute(
 ) -> Result<Response<NeutronMsg>, ContractError> {
     match msg {
         ExecuteMsg::Distribute {} => execute_distribute(env, deps),
+        ExecuteMsg::AddTargetBalances { target_balances } => {
+            execute_add_target_balances(deps, target_balances)
+        }
+        ExecuteMsg::RemoveTargetBalances { target_balances } => {
+            execute_remove_target_balances(deps, target_balances)
+        }
     }
+}
+
+fn execute_add_target_balances(
+    deps: DepsMut,
+    target_balances: Vec<TargetBalance>,
+) -> Result<Response<NeutronMsg>, ContractError> {
+    let mut attrs = vec![];
+    target_balances.into_iter().for_each(|item| {
+        TARGET_BALANCES
+            .save(deps.storage, item.address.to_string(), &item.target_balance)
+            .unwrap();
+        attrs.push(attr(item.address.to_string(), item.target_balance));
+    });
+    Ok(Response::new().add_event(Event::new("execute_add_target_balances").add_attributes(attrs)))
+}
+
+fn execute_remove_target_balances(
+    deps: DepsMut,
+    target_balances: Vec<Addr>,
+) -> Result<Response<NeutronMsg>, ContractError> {
+    let mut attrs = vec![];
+    for addr in target_balances {
+        if TARGET_BALANCES.has(deps.storage, addr.to_string()) {
+            TARGET_BALANCES.remove(deps.storage, addr.to_string());
+            attrs.push(attr("remove_target_balance", addr.to_string()));
+        } else {
+            return Err(ContractError::UnknownTargetBalance {});
+        }
+    }
+    Ok(Response::new()
+        .add_event(Event::new("execute_remove_target_balances").add_attributes(attrs)))
 }
 
 fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, ContractError> {

@@ -7,4 +7,6 @@ pub enum ContractError {
     Std(#[from] StdError),
     #[error("Contract doesn't have enough funds")]
     InsufficientFunds,
+    #[error("Target balance doesn't exist")]
+    UnknownTargetBalance,
 }

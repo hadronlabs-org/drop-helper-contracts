@@ -33,7 +33,7 @@ pub fn instantiate(
                 )
                 .unwrap();
             attrs.push(attr(
-                target_balance.address.clone(),
+                target_balance.address.to_string(),
                 target_balance.target_balance,
             ));
         });

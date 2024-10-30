@@ -22,13 +22,11 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     let mut attrs = vec![];
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION).unwrap();
-    if msg.owner.is_none() {
-        cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
-    } else {
-        deps.api
-            .addr_validate(msg.owner.clone().unwrap().as_str())?;
-        cw_ownable::initialize_owner(deps.storage, deps.api, Some(msg.owner.unwrap().as_str()))?;
-    }
+    let owner = deps
+        .api
+        .addr_validate(msg.owner.unwrap_or(info.sender).as_str())
+        .unwrap();
+    cw_ownable::initialize_owner(deps.storage, deps.api, Some(owner.as_str()))?;
     msg.initial_target_balances
         .iter()
         .for_each(|target_balance: &TargetBalance| {

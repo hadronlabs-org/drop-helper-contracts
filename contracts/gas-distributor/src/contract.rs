@@ -160,7 +160,7 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
         if delta.lt(&Uint128::zero()) {
             let abs_delta = delta.abs_diff(Uint128::zero());
             let funds_to_send = match update_options.update_value {
-                Some(_) => abs_delta + Uint128::from(update_options.update_value.unwrap()),
+                Some(_) => abs_delta + update_options.update_value.unwrap(),
                 None => abs_delta,
             };
             messages.push(CosmosMsg::Bank(BankMsg::Send {

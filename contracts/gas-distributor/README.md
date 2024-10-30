@@ -75,8 +75,8 @@
 }
 ```
 
-- `withdraw_tokens.recepient`: recepient who supposed to get remaining amount of tokens on this contract. If not provided then sender's address pressumed
-- `withdraw_tokens.amount`: amount of tokens that `withdraw_tokens.recepient` will get after execution. If not provided then it takes contract's current balance
+- `withdraw_tokens.recepient`: recepient who supposed to get remaining amount of tokens on this contract. If this field wasn't provided then ownership will be assigned to sender's address
+- `withdraw_tokens.amount`: amount of tokens that `withdraw_tokens.recepient` will get after execution. If this field wasn't provided then it takes contract's current balance
 
 **Permissionless**: No
 
@@ -103,3 +103,22 @@
 ```
 
 - `target_balance.address`: neutron address of registered target balance you want to know information about
+
+### Instantiate Message
+
+**Description**: `initial_target_balances` values are very same as in `add_target_balances`. If owner was not provided then ownership will be assigned to sender's address
+
+```json
+{
+  "owner": null | string,
+  "initial_target_balances": [
+    {
+      "address": string,
+      "update_options": {
+        "target_balance": string,
+        "update_value": string
+      }
+    }
+  ]
+}
+```

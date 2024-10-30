@@ -37,7 +37,7 @@ pub fn instantiate(
                 .save(
                     deps.storage,
                     target_balance.address.to_string(),
-                    &target_balance.update_options,
+                    target_balance,
                 )
                 .unwrap();
             attrs.push(attr(
@@ -69,11 +69,8 @@ fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {
         &TARGET_BALANCES
             .range(deps.storage, None, None, Order::Ascending)
             .map(|item| {
-                let (key, value) = item.unwrap();
-                TargetBalance {
-                    address: Addr::unchecked(key),
-                    update_options: value,
-                }
+                let (_, update_options) = item.unwrap();
+                update_options
             })
             .collect::<Vec<TargetBalance>>(),
     )
@@ -156,7 +153,7 @@ fn execute_add_target_balances(
             .save(
                 deps.storage,
                 target_balance.address.to_string(),
-                &target_balance.update_options,
+                &target_balance,
             )
             .unwrap();
         attrs.push(attr("add-target-balance", target_balance.address));
@@ -194,16 +191,16 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
     let mut attrs = vec![];
     let mut messages = vec![];
     let mut total_funds_required = 0u128;
-    for target_balance in TARGET_BALANCES.range(deps.storage, None, None, Order::Ascending) {
-        let (address, update_options) = target_balance.unwrap();
+    for item in TARGET_BALANCES.range(deps.storage, None, None, Order::Ascending) {
+        let (address, target_balance) = item.unwrap();
         let current_balance = deps
             .querier
             .query_balance(address.clone(), UNTRN_DENOM.to_string())?
             .amount;
-        if current_balance < update_options.target_balance {
-            let abs_delta = current_balance.abs_diff(update_options.target_balance);
-            let funds_to_send = match update_options.update_value {
-                Some(_) => abs_delta + update_options.update_value.unwrap(),
+        if current_balance < target_balance.update_options.target_balance {
+            let abs_delta = current_balance.abs_diff(target_balance.update_options.target_balance);
+            let funds_to_send = match target_balance.update_options.update_value {
+                Some(_) => abs_delta + target_balance.update_options.update_value.unwrap(),
                 None => abs_delta,
             };
             messages.push(CosmosMsg::Bank(BankMsg::Send {

@@ -6,8 +6,10 @@ use cosmwasm_std::{
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
-    msg::gas_distributor::{ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance},
-    state::gas_distributor::{TargetBalanceUpdateParams, TARGET_BALANCES},
+    msg::gas_distributor::{
+        ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance, TargetBalanceUpdateParams,
+    },
+    state::gas_distributor::TARGET_BALANCES,
 };
 use drop_helper_contracts_helpers::testing::mock_dependencies;
 
@@ -210,14 +212,21 @@ fn test_query_target_balance() {
     let mut deps = mock_dependencies(&[]);
     let deps_mut = deps.as_mut();
     cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
-    let expected_params = TargetBalanceUpdateParams {
-        target_balance: Uint128::from(123_u64),
-        update_value: Some(Uint128::from(2000_u64)),
+    let expected_params = TargetBalance {
+        address: Addr::unchecked("address"),
+        update_options: TargetBalanceUpdateParams {
+            target_balance: Uint128::from(123_u64),
+            update_value: Some(Uint128::from(2000_u64)),
+        },
     };
     TARGET_BALANCES
-        .save(deps_mut.storage, "address".to_string(), &expected_params)
+        .save(
+            deps_mut.storage,
+            expected_params.address.to_string(),
+            &expected_params,
+        )
         .unwrap();
-    let response: TargetBalanceUpdateParams = from_json(
+    let response: TargetBalance = from_json(
         query(
             deps.as_ref().into_empty(),
             mock_env(),
@@ -278,7 +287,7 @@ fn test_query_target_balances() {
                 .save(
                     deps_mut.storage,
                     target_balance.address.to_string(),
-                    &target_balance.update_options,
+                    &target_balance,
                 )
                 .unwrap();
         });
@@ -340,12 +349,19 @@ fn test_execute_remove_target_balances_not_exist() {
     let mut deps = mock_dependencies(&[]);
     let deps_mut = deps.as_mut();
     cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
-    let expected_params = TargetBalanceUpdateParams {
-        target_balance: Uint128::from(123_u64),
-        update_value: Some(Uint128::from(2000_u64)),
+    let expected_params = TargetBalance {
+        address: Addr::unchecked("address1"),
+        update_options: TargetBalanceUpdateParams {
+            target_balance: Uint128::from(123_u64),
+            update_value: Some(Uint128::from(2000_u64)),
+        },
     };
     TARGET_BALANCES
-        .save(deps_mut.storage, "address1".to_string(), &expected_params)
+        .save(
+            deps_mut.storage,
+            expected_params.address.to_string(),
+            &expected_params,
+        )
         .unwrap();
     let execute_res = execute(
         deps_mut.into_empty(),
@@ -369,10 +385,24 @@ fn test_execute_remove_target_balances() {
         update_value: Some(Uint128::from(2000_u64)),
     };
     TARGET_BALANCES
-        .save(deps_mut.storage, "address1".to_string(), &expected_params)
+        .save(
+            deps_mut.storage,
+            "address1".to_string(),
+            &TargetBalance {
+                address: Addr::unchecked("address1"),
+                update_options: expected_params.clone(),
+            },
+        )
         .unwrap();
     TARGET_BALANCES
-        .save(deps_mut.storage, "address2".to_string(), &expected_params)
+        .save(
+            deps_mut.storage,
+            "address2".to_string(),
+            &TargetBalance {
+                address: Addr::unchecked("address2"),
+                update_options: expected_params,
+            },
+        )
         .unwrap();
     let execute_res = execute(
         deps_mut.into_empty(),
@@ -451,15 +481,9 @@ fn test_execute_add_target_balances() {
             cosmwasm_std::Order::Ascending,
         )
         .map(
-            |target_balance: Result<
-                (String, TargetBalanceUpdateParams),
-                cosmwasm_std::StdError,
-            >| {
-                let (address, update_options) = target_balance.unwrap();
-                TargetBalance {
-                    address: Addr::unchecked(address),
-                    update_options,
-                }
+            |item: Result<(String, TargetBalance), cosmwasm_std::StdError>| {
+                let (_, target_balance) = item.unwrap();
+                target_balance
             },
         )
         .collect::<Vec<TargetBalance>>();

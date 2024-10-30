@@ -2,14 +2,14 @@ use crate::contract::{execute, instantiate, query};
 use cosmwasm_std::{
     attr, from_json,
     testing::{mock_env, mock_info},
-    Addr, BankMsg, Event, Order, Response, SubMsg, Uint128,
+    Addr, BalanceResponse, BankMsg, Event, Order, Response, SubMsg, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
     msg::gas_distributor::{
         ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance, TargetBalanceUpdateParams,
     },
-    state::gas_distributor::TARGET_BALANCES,
+    state::gas_distributor::{TARGET_BALANCES, UNTRN_DENOM},
 };
 use drop_helper_contracts_helpers::testing::mock_dependencies;
 
@@ -640,6 +640,213 @@ fn test_execute_withdraw_tokens_unauthorized_custom_amount_and_recepient() {
             .add_event(Event::new(
                 "crates.io:drop-helper__drop-gas-distributor-execute-withdraw-tokens"
             ))
+    );
+}
+
+#[test]
+fn test_distribute_2_addresses() {
+    let mut deps = mock_dependencies(&[cosmwasm_std::Coin {
+        denom: "untrn".to_string(),
+        amount: Uint128::from(1000_u128),
+    }]);
+    let expected_params = TargetBalanceUpdateParams {
+        target_balance: Uint128::from(100_u64),
+        update_value: Some(Uint128::from(10_u64)),
+    };
+    TARGET_BALANCES
+        .save(
+            deps.as_mut().storage,
+            "address1".to_string(),
+            &TargetBalance {
+                address: Addr::unchecked("address1"),
+                update_options: expected_params.clone(),
+            },
+        )
+        .unwrap();
+    TARGET_BALANCES
+        .save(
+            deps.as_mut().storage,
+            "address2".to_string(),
+            &TargetBalance {
+                address: Addr::unchecked("address2"),
+                update_options: expected_params,
+            },
+        )
+        .unwrap();
+    deps.querier.add_bank_query_response(
+        "address2".to_string(),
+        BalanceResponse {
+            amount: cosmwasm_std::Coin {
+                denom: UNTRN_DENOM.to_string(),
+                amount: Uint128::from(13_u128),
+            },
+        },
+    );
+    let execute_res = execute(
+        deps.as_mut().into_empty(),
+        mock_env(),
+        mock_info("owner", &[]),
+        ExecuteMsg::Distribute {},
+    )
+    .unwrap();
+
+    assert_eq!(
+        execute_res,
+        Response::new()
+            .add_submessages(vec![
+                SubMsg {
+                    id: 0_u64,
+                    msg: cosmwasm_std::CosmosMsg::Bank(BankMsg::Send {
+                        to_address: "address1".to_string(),
+                        amount: vec![cosmwasm_std::Coin {
+                            denom: "untrn".to_string(),
+                            amount: Uint128::from(110_u128)
+                        }]
+                    }),
+                    gas_limit: None,
+                    reply_on: cosmwasm_std::ReplyOn::Never
+                },
+                SubMsg {
+                    id: 0_u64,
+                    msg: cosmwasm_std::CosmosMsg::Bank(BankMsg::Send {
+                        to_address: "address2".to_string(),
+                        amount: vec![cosmwasm_std::Coin {
+                            denom: "untrn".to_string(),
+                            amount: Uint128::from(97_u128)
+                        }]
+                    }),
+                    gas_limit: None,
+                    reply_on: cosmwasm_std::ReplyOn::Never
+                }
+            ])
+            .add_event(
+                Event::new("crates.io:drop-helper__drop-gas-distributor-execute-distribute")
+                    .add_attributes(vec![attr("address1", "110"), attr("address2", "97")])
+            )
+    );
+}
+
+#[test]
+fn test_distribute_1_address() {
+    let mut deps = mock_dependencies(&[cosmwasm_std::Coin {
+        denom: "untrn".to_string(),
+        amount: Uint128::from(150_u128),
+    }]);
+    let expected_params = TargetBalanceUpdateParams {
+        target_balance: Uint128::from(100_u64),
+        update_value: Some(Uint128::from(10_u64)),
+    };
+    TARGET_BALANCES
+        .save(
+            deps.as_mut().storage,
+            "address1".to_string(),
+            &TargetBalance {
+                address: Addr::unchecked("address1"),
+                update_options: expected_params.clone(),
+            },
+        )
+        .unwrap();
+    TARGET_BALANCES
+        .save(
+            deps.as_mut().storage,
+            "address2".to_string(),
+            &TargetBalance {
+                address: Addr::unchecked("address2"),
+                update_options: expected_params,
+            },
+        )
+        .unwrap();
+    deps.querier.add_bank_query_response(
+        "address2".to_string(),
+        BalanceResponse {
+            amount: cosmwasm_std::Coin {
+                denom: UNTRN_DENOM.to_string(),
+                amount: Uint128::from(13_u128),
+            },
+        },
+    );
+    let execute_res = execute(
+        deps.as_mut().into_empty(),
+        mock_env(),
+        mock_info("owner", &[]),
+        ExecuteMsg::Distribute {},
+    )
+    .unwrap();
+
+    assert_eq!(
+        execute_res,
+        Response::new()
+            .add_submessages(vec![SubMsg {
+                id: 0_u64,
+                msg: cosmwasm_std::CosmosMsg::Bank(BankMsg::Send {
+                    to_address: "address1".to_string(),
+                    amount: vec![cosmwasm_std::Coin {
+                        denom: "untrn".to_string(),
+                        amount: Uint128::from(110_u128)
+                    }]
+                }),
+                gas_limit: None,
+                reply_on: cosmwasm_std::ReplyOn::Never
+            }])
+            .add_event(
+                Event::new("crates.io:drop-helper__drop-gas-distributor-execute-distribute")
+                    .add_attributes(vec![attr("address1", "110")])
+            )
+    );
+}
+
+#[test]
+fn test_distribute_nobody() {
+    let mut deps = mock_dependencies(&[cosmwasm_std::Coin {
+        denom: "untrn".to_string(),
+        amount: Uint128::from(10_u128),
+    }]);
+    let expected_params = TargetBalanceUpdateParams {
+        target_balance: Uint128::from(100_u64),
+        update_value: Some(Uint128::from(10_u64)),
+    };
+    TARGET_BALANCES
+        .save(
+            deps.as_mut().storage,
+            "address1".to_string(),
+            &TargetBalance {
+                address: Addr::unchecked("address1"),
+                update_options: expected_params.clone(),
+            },
+        )
+        .unwrap();
+    TARGET_BALANCES
+        .save(
+            deps.as_mut().storage,
+            "address2".to_string(),
+            &TargetBalance {
+                address: Addr::unchecked("address2"),
+                update_options: expected_params,
+            },
+        )
+        .unwrap();
+    deps.querier.add_bank_query_response(
+        "address2".to_string(),
+        BalanceResponse {
+            amount: cosmwasm_std::Coin {
+                denom: UNTRN_DENOM.to_string(),
+                amount: Uint128::from(13_u128),
+            },
+        },
+    );
+    let execute_res = execute(
+        deps.as_mut().into_empty(),
+        mock_env(),
+        mock_info("owner", &[]),
+        ExecuteMsg::Distribute {},
+    )
+    .unwrap();
+
+    assert_eq!(
+        execute_res,
+        Response::new().add_event(Event::new(
+            "crates.io:drop-helper__drop-gas-distributor-execute-distribute"
+        ))
     );
 }
 

@@ -1,5 +1,7 @@
 ## Drop Gas Distributor
 
+This contract's purpose is to sustain balances on provided neutron addresses (ICQ/IBC relayers, some of Drop contracts for IBC fees etc.)
+
 ### Execute Methods:
 
 #### `distribute`

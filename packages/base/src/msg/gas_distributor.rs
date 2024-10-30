@@ -20,7 +20,7 @@ pub struct MigrateMsg {}
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(Vec<TargetBalance>)]
-    TargetBalances,
+    TargetBalances {},
     #[returns(Uint128)]
     TargetBalance { address: Addr },
 }

@@ -47,7 +47,7 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     Ok(match msg {
-        QueryMsg::TargetBalances => to_json_binary(&query_target_balances(deps)).unwrap(),
+        QueryMsg::TargetBalances {} => to_json_binary(&query_target_balances(deps)).unwrap(),
         QueryMsg::TargetBalance { address } => {
             to_json_binary(&query_target_balance(deps, address)).unwrap()
         }

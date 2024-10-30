@@ -15,17 +15,17 @@ fn test_instantiate() {
     let response = contract::instantiate(
         deps.as_mut().into_empty(),
         mock_env(),
-        mock_info("sender", &vec![]),
+        mock_info("sender", &[]),
         InstantiateMsg {
             owner: None,
             initial_target_balances: vec![
                 TargetBalance {
                     address: Addr::unchecked("address1"),
-                    target_balance: Uint128::from(123 as u64),
+                    target_balance: Uint128::from(123_u64),
                 },
                 TargetBalance {
                     address: Addr::unchecked("address2"),
-                    target_balance: Uint128::from(321 as u64),
+                    target_balance: Uint128::from(321_u64),
                 },
             ],
         },
@@ -55,11 +55,11 @@ fn test_instantiate() {
         vec![
             TargetBalance {
                 address: Addr::unchecked("address1"),
-                target_balance: Uint128::from(123 as u64)
+                target_balance: Uint128::from(123_u64)
             },
             TargetBalance {
                 address: Addr::unchecked("address2"),
-                target_balance: Uint128::from(321 as u64)
+                target_balance: Uint128::from(321_u64)
             }
         ]
     );

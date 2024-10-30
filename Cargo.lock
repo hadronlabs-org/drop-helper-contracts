@@ -361,6 +361,7 @@ dependencies = [
  "cw-utils",
  "cw2",
  "drop-helper-contracts-base",
+ "drop-helper-contracts-helpers",
  "neutron-sdk",
  "thiserror",
 ]
@@ -373,6 +374,18 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw-utils",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "drop-helper-contracts-helpers"
+version = "1.0.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "neutron-sdk",
  "serde",
  "thiserror",
 ]

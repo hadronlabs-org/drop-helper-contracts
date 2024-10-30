@@ -19,7 +19,7 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    let mut attrs = vec![attr("action", "instantiate")];
+    let mut attrs = vec![];
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION).unwrap();
     if msg.owner.is_none() {
         cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
@@ -47,7 +47,7 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     Ok(match msg {
-        QueryMsg::TargetBalances() => to_json_binary(&query_target_balances(deps)).unwrap(),
+        QueryMsg::TargetBalances => to_json_binary(&query_target_balances(deps)).unwrap(),
         QueryMsg::TargetBalance { address } => {
             to_json_binary(&query_target_balance(deps, address)).unwrap()
         }

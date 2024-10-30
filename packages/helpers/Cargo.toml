@@ -1,13 +1,13 @@
 [package]
 authors = ["Vladislav Vasilev <vfaust.thefuture@gmail.com>"]
-description = "Contract to send funds where they're in shortage"
+description = "Drop Helpers"
 edition = "2021"
-name = "drop-gas-distributor"
+name = "drop-helper-contracts-helpers"
 version = "1.0.0"
 
 exclude = [
-    "contract.wasm",
-    "hash.txt",
+  "contract.wasm",
+  "hash.txt",
 ]
 
 [lib]
@@ -18,13 +18,9 @@ backtraces = ["cosmwasm-std/backtraces"]
 library = []
 
 [dependencies]
-cw2 = { workspace = true }
+cosmwasm-std = { workspace = true }
 neutron-sdk = { workspace = true }
 cosmwasm-schema = { workspace = true }
-cosmwasm-std = { workspace = true }
-cw-ownable = { workspace = true }
 thiserror = { workspace = true }
-cw-utils = { workspace = true }
 cw-storage-plus = { workspace = true }
-drop-helper-contracts-base = { workspace = true }
-drop-helper-contracts-helpers = { workspace = true }
+serde = { workspace = true }

@@ -1,12 +1,12 @@
-use crate::contract::{self, query};
+use crate::contract::{execute, instantiate, query};
 use cosmwasm_std::{
     attr, from_json,
     testing::{mock_env, mock_info},
-    Addr, Event, Response, Uint128,
+    Addr, Binary, Event, Response, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
-    msg::gas_distributor::{InstantiateMsg, QueryMsg, TargetBalance},
+    msg::gas_distributor::{ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance},
     state::gas_distributor::{TargetBalanceUpdateParams, TARGET_BALANCES},
 };
 use drop_helper_contracts_helpers::testing::mock_dependencies;
@@ -14,7 +14,7 @@ use drop_helper_contracts_helpers::testing::mock_dependencies;
 #[test]
 fn test_instantiate_general() {
     let mut deps = mock_dependencies(&[]);
-    let response = contract::instantiate(
+    let response = instantiate(
         deps.as_mut().into_empty(),
         mock_env(),
         mock_info("sender", &[]),
@@ -86,7 +86,7 @@ fn test_instantiate_general() {
 #[test]
 fn test_instantiate_custom_owner() {
     let mut deps = mock_dependencies(&[]);
-    let response = contract::instantiate(
+    let response = instantiate(
         deps.as_mut().into_empty(),
         mock_env(),
         mock_info("sender", &[]),
@@ -123,16 +123,22 @@ fn test_instantiate_custom_owner() {
             )
         )
     );
-    let owner: String =
-        from_json(query(deps.as_ref().into_empty(), mock_env(), QueryMsg::Owner {}).unwrap())
-            .unwrap();
+    let owner: String = from_json(
+        query(
+            deps.as_ref().into_empty(),
+            mock_env(),
+            QueryMsg::Ownership {},
+        )
+        .unwrap(),
+    )
+    .unwrap();
     assert_eq!(owner, "owner");
 }
 
 #[test]
 fn test_instantiate_sender_owner() {
     let mut deps = mock_dependencies(&[]);
-    let response = contract::instantiate(
+    let response = instantiate(
         deps.as_mut().into_empty(),
         mock_env(),
         mock_info("sender", &[]),
@@ -169,9 +175,15 @@ fn test_instantiate_sender_owner() {
             )
         )
     );
-    let owner: String =
-        from_json(query(deps.as_ref().into_empty(), mock_env(), QueryMsg::Owner {}).unwrap())
-            .unwrap();
+    let owner: String = from_json(
+        query(
+            deps.as_ref().into_empty(),
+            mock_env(),
+            QueryMsg::Ownership {},
+        )
+        .unwrap(),
+    )
+    .unwrap();
     assert_eq!(owner, "sender");
 }
 
@@ -181,9 +193,15 @@ fn test_query_owner() {
     let deps_mut = deps.as_mut();
     cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
 
-    let owner: String =
-        from_json(query(deps.as_ref().into_empty(), mock_env(), QueryMsg::Owner {}).unwrap())
-            .unwrap();
+    let owner: String = from_json(
+        query(
+            deps.as_ref().into_empty(),
+            mock_env(),
+            QueryMsg::Ownership {},
+        )
+        .unwrap(),
+    )
+    .unwrap();
     assert_eq!(owner, "owner");
 }
 
@@ -275,4 +293,55 @@ fn test_query_target_balances() {
     )
     .unwrap();
     assert_eq!(response, target_balances);
+}
+
+#[test]
+fn test_query_ownership() {
+    let mut deps = mock_dependencies(&[]);
+    let deps_mut = deps.as_mut();
+    cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
+    let query_res: String = from_json(
+        query(
+            deps.as_ref().into_empty(),
+            mock_env(),
+            QueryMsg::Ownership {},
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(query_res, "owner".to_string());
+}
+
+#[test]
+fn test_transfer_ownership() {
+    let mut deps = mock_dependencies(&[]);
+    let deps_mut = deps.as_mut();
+    cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
+    execute(
+        deps.as_mut().into_empty(),
+        mock_env(),
+        mock_info("owner", &[]),
+        ExecuteMsg::UpdateOwnership(cw_ownable::Action::TransferOwnership {
+            new_owner: "new_owner".to_string(),
+            expiry: Some(cw_ownable::Expiration::Never {}),
+        }),
+    )
+    .unwrap();
+    execute(
+        deps.as_mut().into_empty(),
+        mock_env(),
+        mock_info("new_owner", &[]),
+        ExecuteMsg::UpdateOwnership(cw_ownable::Action::AcceptOwnership {}),
+    )
+    .unwrap();
+    let query_res: String = from_json(
+        query(
+            deps.as_ref().into_empty(),
+            mock_env(),
+            QueryMsg::Ownership {},
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(query_res, "new_owner".to_string());
 }

@@ -5,7 +5,7 @@ use cosmwasm_std::{
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
     msg::gas_distributor::{ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance},
-    state::gas_distributor::{TargetBalanceUpdateParams, TARGET_BALANCES},
+    state::gas_distributor::TARGET_BALANCES,
 };
 use drop_helper_contracts_helpers::answer::response;
 use neutron_sdk::bindings::msg::NeutronMsg;
@@ -55,7 +55,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
     Ok(match msg {
         QueryMsg::TargetBalances {} => query_target_balances(deps)?,
         QueryMsg::TargetBalance { address } => query_target_balance(deps, address)?,
-        QueryMsg::Owner {} => to_json_binary(
+        QueryMsg::Ownership {} => to_json_binary(
             &cw_ownable::get_ownership(deps.storage)?
                 .owner
                 .unwrap_or(Addr::unchecked(""))

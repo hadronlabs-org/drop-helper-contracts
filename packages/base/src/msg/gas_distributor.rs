@@ -18,6 +18,7 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub struct MigrateMsg {}
 
+#[cw_ownable::cw_ownable_query]
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
@@ -25,8 +26,6 @@ pub enum QueryMsg {
     TargetBalances {},
     #[returns(cosmwasm_std::Uint128)]
     TargetBalance { address: Addr },
-    #[returns(String)]
-    Owner {},
 }
 
 #[cw_ownable_execute]

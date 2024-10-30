@@ -82,6 +82,24 @@
 
 ### Query Methods:
 
+#### `target_balances`
+
+**Description**: Get all registered target balances
+
+**Parameters**: No
+
+#### `target_balance`
+
+**Description**: Get info about specific registered target balance
+
+**Parameters**:
+
+```json
+{
+  "target_balance": {
+    "address": string,
+  }
+}
 ```
 
-```
+- `target_balance.address`: neutron address of registered target balance you want to know information about

@@ -1,5 +1,5 @@
-use crate::msg::InstantiateMsg;
-use cosmwasm_std::{entry_point, ContractResult, DepsMut, Env, MessageInfo, Response};
+use crate::{error::ContractError, msg::InstantiateMsg};
+use cosmwasm_std::{entry_point, DepsMut, Env, MessageInfo, Response};
 
 const CONTRACT_NAME: &str = concat!("crates.io:drop-staking__", env!("CARGO_PKG_NAME"));
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -10,7 +10,7 @@ pub fn instantiate(
     _env: Env,
     _info: MessageInfo,
     _msg: InstantiateMsg,
-) -> ContractResult<Response> {
+) -> Result<Response, ContractError> {
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION).unwrap();
-    unimplemented!();
+    unimplemented!()
 }

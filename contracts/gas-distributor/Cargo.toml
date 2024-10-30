@@ -23,6 +23,5 @@ cosmwasm-schema = { workspace = true }
 cosmwasm-std = { workspace = true }
 cw-ownable = { workspace = true }
 thiserror = { workspace = true }
-cw-multi-test = { workspace = true }
 cw-utils = { workspace = true }
 cw-storage-plus = { workspace = true }

@@ -1,13 +1,14 @@
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 
 #[cw_serde]
 pub struct InstantiateMsg {}
 
 #[cw_serde]
-pub struct QueryMsg {}
-
-#[cw_serde]
-pub struct ExecuteMsg {}
-
-#[cw_serde]
 pub struct MigrateMsg {}
+
+#[cw_serde]
+#[derive(QueryResponses)]
+pub enum QueryMsg {}
+
+#[cw_serde]
+pub enum ExecuteMsg {}

@@ -5,7 +5,7 @@ use cosmwasm_std::{
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
     msg::gas_distributor::{ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance},
-    state::gas_distributor::TARGET_BALANCES,
+    state::gas_distributor::{TargetBalanceUpdateParams, TARGET_BALANCES},
 };
 use neutron_sdk::bindings::msg::NeutronMsg;
 
@@ -36,12 +36,12 @@ pub fn instantiate(
                 .save(
                     deps.storage,
                     target_balance.address.to_string(),
-                    &target_balance.target_balance,
+                    &target_balance.update_options,
                 )
                 .unwrap();
             attrs.push(attr(
+                "add_target_balance",
                 target_balance.address.to_string(),
-                target_balance.target_balance,
             ));
         });
     Ok(Response::default().add_event(Event::new("instantiate").add_attributes(attrs)))
@@ -63,7 +63,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
     })
 }
 
-fn query_target_balance(deps: Deps, address: Addr) -> Uint128 {
+fn query_target_balance(deps: Deps, address: Addr) -> TargetBalanceUpdateParams {
     TARGET_BALANCES
         .load(deps.storage, address.to_string())
         .unwrap()
@@ -76,7 +76,7 @@ fn query_target_balances(deps: Deps) -> Vec<TargetBalance> {
             let (key, value) = item.unwrap();
             TargetBalance {
                 address: Addr::unchecked(key),
-                target_balance: value,
+                update_options: value,
             }
         })
         .collect()
@@ -111,12 +111,18 @@ fn execute_add_target_balances(
 ) -> Result<Response<NeutronMsg>, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender).unwrap();
     let mut attrs = vec![];
-    target_balances.into_iter().for_each(|item| {
-        deps.api.addr_validate(item.address.as_str()).unwrap();
-        TARGET_BALANCES
-            .save(deps.storage, item.address.to_string(), &item.target_balance)
+    target_balances.into_iter().for_each(|target_balance| {
+        deps.api
+            .addr_validate(target_balance.address.as_str())
             .unwrap();
-        attrs.push(attr(item.address.to_string(), item.target_balance));
+        TARGET_BALANCES
+            .save(
+                deps.storage,
+                target_balance.address.to_string(),
+                &target_balance.update_options,
+            )
+            .unwrap();
+        attrs.push(attr("add_target_balance", target_balance.address));
     });
     Ok(Response::new().add_event(Event::new("execute_add_target_balances").add_attributes(attrs)))
 }
@@ -144,24 +150,28 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
     let mut attrs = vec![];
     let mut messages = vec![];
     let mut total_funds_required = 0u128;
-    for item in TARGET_BALANCES.range(deps.storage, None, None, Order::Ascending) {
-        let (address, target_balance) = item.unwrap();
+    for target_balance in TARGET_BALANCES.range(deps.storage, None, None, Order::Ascending) {
+        let (address, update_options) = target_balance.unwrap();
         let current_balance = deps
             .querier
             .query_balance(address.clone(), "untrn".to_string())?
             .amount;
-        let delta = current_balance - target_balance;
+        let delta = current_balance - update_options.target_balance;
         if delta.lt(&Uint128::zero()) {
             let abs_delta = delta.abs_diff(Uint128::zero());
+            let funds_to_send = match update_options.update_value {
+                Some(_) => abs_delta + Uint128::from(update_options.update_value.unwrap()),
+                None => abs_delta,
+            };
             messages.push(CosmosMsg::Bank(BankMsg::Send {
                 to_address: address.clone(),
                 amount: vec![Coin {
                     denom: "untrn".to_string(),
-                    amount: abs_delta,
+                    amount: funds_to_send,
                 }],
             }));
-            attrs.push(attr(address, abs_delta));
-            total_funds_required += abs_delta.u128();
+            attrs.push(attr(address, funds_to_send));
+            total_funds_required += funds_to_send.u128();
         }
     }
     let contract_balance = deps

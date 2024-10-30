@@ -1,3 +1,4 @@
+use crate::state::gas_distributor::TargetBalanceUpdateParams;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 use cw_ownable::cw_ownable_execute;
@@ -5,7 +6,7 @@ use cw_ownable::cw_ownable_execute;
 #[cw_serde]
 pub struct TargetBalance {
     pub address: Addr,
-    pub target_balance: Uint128,
+    pub update_options: TargetBalanceUpdateParams,
 }
 
 #[cw_serde]

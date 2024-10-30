@@ -1,4 +1,11 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Uint128;
 use cw_storage_plus::Map;
 
-pub const TARGET_BALANCES: Map<String, Uint128> = Map::new("target_balances");
+#[cw_serde]
+pub struct TargetBalanceUpdateParams {
+    pub target_balance: Uint128,
+    pub update_value: Option<Uint128>,
+}
+
+pub const TARGET_BALANCES: Map<String, TargetBalanceUpdateParams> = Map::new("target_balances");

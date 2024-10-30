@@ -4,7 +4,10 @@ use cosmwasm_std::{
     testing::{mock_env, mock_info},
     Addr, Event, Response, Uint128,
 };
-use drop_helper_contracts_base::msg::gas_distributor::{InstantiateMsg, QueryMsg, TargetBalance};
+use drop_helper_contracts_base::{
+    msg::gas_distributor::{InstantiateMsg, QueryMsg, TargetBalance},
+    state::gas_distributor::TargetBalanceUpdateParams,
+};
 use drop_helper_contracts_helpers::testing::mock_dependencies;
 
 #[test]
@@ -21,11 +24,17 @@ fn test_instantiate() {
             initial_target_balances: vec![
                 TargetBalance {
                     address: Addr::unchecked("address1"),
-                    target_balance: Uint128::from(123_u64),
+                    update_options: TargetBalanceUpdateParams {
+                        target_balance: Uint128::from(123_u64),
+                        update_value: Some(Uint128::from(2000_u64)),
+                    },
                 },
                 TargetBalance {
                     address: Addr::unchecked("address2"),
-                    target_balance: Uint128::from(321_u64),
+                    update_options: TargetBalanceUpdateParams {
+                        target_balance: Uint128::from(321_u64),
+                        update_value: Some(Uint128::from(1000_u64)),
+                    },
                 },
             ],
         },
@@ -55,11 +64,17 @@ fn test_instantiate() {
         vec![
             TargetBalance {
                 address: Addr::unchecked("address1"),
-                target_balance: Uint128::from(123_u64)
+                update_options: TargetBalanceUpdateParams {
+                    target_balance: Uint128::from(123_u64),
+                    update_value: Some(Uint128::from(2000_u64)),
+                }
             },
             TargetBalance {
                 address: Addr::unchecked("address2"),
-                target_balance: Uint128::from(321_u64)
+                update_options: TargetBalanceUpdateParams {
+                    target_balance: Uint128::from(321_u64),
+                    update_value: Some(Uint128::from(1000_u64)),
+                }
             }
         ]
     );

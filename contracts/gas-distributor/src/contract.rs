@@ -122,10 +122,7 @@ fn execute_withdraw_tokens(
         .query_balance(env.contract.address, "untrn".to_string())
         .unwrap()
         .amount;
-    let amount_to_send = match amount {
-        Some(a) => a,
-        None => contract_balance,
-    };
+    let amount_to_send = amount.unwrap_or(contract_balance);
     if amount_to_send > contract_balance {
         return Err(ContractError::InsufficientFunds);
     }

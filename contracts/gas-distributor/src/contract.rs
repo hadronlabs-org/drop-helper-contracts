@@ -1,15 +1,16 @@
 use cosmwasm_std::{
-    attr, entry_point, to_json_binary, Addr, BankMsg, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
-    Event, MessageInfo, Order, Response, Uint128,
+    attr, entry_point, to_json_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps,
+    DepsMut, Env, Event, MessageInfo, Order, Response, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
     msg::gas_distributor::{ExecuteMsg, InstantiateMsg, QueryMsg, TargetBalance},
     state::gas_distributor::{TargetBalanceUpdateParams, TARGET_BALANCES},
 };
+use drop_helper_contracts_helpers::answer::response;
 use neutron_sdk::bindings::msg::NeutronMsg;
 
-const CONTRACT_NAME: &str = concat!("crates.io:drop-staking__", env!("CARGO_PKG_NAME"));
+const CONTRACT_NAME: &str = concat!("crates.io:drop-helper__", env!("CARGO_PKG_NAME"));
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -42,11 +43,11 @@ pub fn instantiate(
                 )
                 .unwrap();
             attrs.push(attr(
-                "add_target_balance",
+                "add-target-balance",
                 target_balance.address.to_string(),
             ));
         });
-    Ok(Response::default().add_event(Event::new("instantiate").add_attributes(attrs)))
+    Ok(response("instantiate", CONTRACT_NAME, attrs))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -94,7 +95,11 @@ pub fn execute(
     match msg {
         ExecuteMsg::UpdateOwnership(action) => {
             cw_ownable::update_ownership(deps.into_empty(), &env.block, &info.sender, action)?;
-            Ok(Response::new().add_event(Event::new("execute-update-ownership")))
+            Ok(response::<(&str, &str), _>(
+                "execute-update-ownership",
+                CONTRACT_NAME,
+                [],
+            ))
         }
         ExecuteMsg::Distribute {} => execute_distribute(env, deps),
         ExecuteMsg::AddTargetBalances { target_balances } => {
@@ -132,7 +137,12 @@ fn execute_withdraw_tokens(
     if recepient.is_none() {
         recepient = Some(info.sender.to_string());
     }
-    Ok(Response::new().add_message(CosmosMsg::Bank(BankMsg::Send {
+    Ok(response(
+        "execute-withdraw-tokens",
+        CONTRACT_NAME,
+        Vec::<Attribute>::new(),
+    )
+    .add_message(CosmosMsg::Bank(BankMsg::Send {
         to_address: recepient.unwrap(),
         amount: vec![Coin {
             denom: "untrn".to_string(),
@@ -159,9 +169,13 @@ fn execute_add_target_balances(
                 &target_balance.update_options,
             )
             .unwrap();
-        attrs.push(attr("add_target_balance", target_balance.address));
+        attrs.push(attr("add-target-balance", target_balance.address));
     });
-    Ok(Response::new().add_event(Event::new("execute_add_target_balances").add_attributes(attrs)))
+    Ok(response(
+        "execute-add-target-balances",
+        CONTRACT_NAME,
+        attrs,
+    ))
 }
 
 fn execute_remove_target_balances(
@@ -174,13 +188,16 @@ fn execute_remove_target_balances(
     for addr in target_balances {
         if TARGET_BALANCES.has(deps.storage, addr.to_string()) {
             TARGET_BALANCES.remove(deps.storage, addr.to_string());
-            attrs.push(attr("remove_target_balance", addr.to_string()));
+            attrs.push(attr("remove-target-balance", addr.to_string()));
         } else {
             return Err(ContractError::UnknownTargetBalance {});
         }
     }
-    Ok(Response::new()
-        .add_event(Event::new("execute_remove_target_balances").add_attributes(attrs)))
+    Ok(response(
+        "execute-remove-target-balances",
+        CONTRACT_NAME,
+        attrs,
+    ))
 }
 
 fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, ContractError> {
@@ -218,7 +235,5 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
     if total_funds_required > contract_balance {
         return Err(ContractError::InsufficientFunds {});
     }
-    Ok(Response::new()
-        .add_event(Event::new("execute_distribute").add_attributes(attrs))
-        .add_messages(messages))
+    Ok(response("execute-distribute", CONTRACT_NAME, attrs).add_messages(messages))
 }

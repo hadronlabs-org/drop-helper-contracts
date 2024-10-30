@@ -218,10 +218,10 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
                     }],
                 }));
                 contract_balance = contract_balance.abs_diff(funds_to_send);
+                attrs.push(attr(address, funds_to_send));
             } else {
                 break;
             }
-            attrs.push(attr(address, funds_to_send));
         }
     }
     Ok(response("execute-distribute", CONTRACT_NAME, attrs).add_messages(messages))

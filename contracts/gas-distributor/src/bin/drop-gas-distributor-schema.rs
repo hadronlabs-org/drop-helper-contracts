@@ -1,5 +1,7 @@
 use cosmwasm_schema::write_api;
-use drop_gas_distributor::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use drop_helper_contracts_base::msg::gas_distributor::{
+    ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
+};
 
 fn main() {
     write_api! {

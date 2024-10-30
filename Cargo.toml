@@ -16,6 +16,9 @@ cw-utils = { version = "1.0.3", default-features = false }
 cw2 = { version = "1.1.2", default-features = false }
 cw-storage-plus = { version = "1.2.0", default-features = false }
 cosmwasm-schema = { version = "1.5.4", default-features = false }
+serde = { version = "1.0.195", default-features = false }
+
+drop-helper-contracts-base = { path = "./packages/drop-helper-contracts-base", default-features = false }
 
 [profile.release]
 ops-level = 3

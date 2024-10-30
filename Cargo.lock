@@ -319,6 +319,19 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
+ "drop-helper-contracts-base",
+ "thiserror",
+]
+
+[[package]]
+name = "drop-helper-contracts-base"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw-utils",
+ "serde",
  "thiserror",
 ]
 

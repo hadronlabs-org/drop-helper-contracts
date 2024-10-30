@@ -114,7 +114,7 @@ fn execute_withdraw_tokens(
     info: MessageInfo,
     env: Env,
     amount: Option<Uint128>,
-    mut recepient: Option<String>,
+    recepient: Option<String>,
 ) -> Result<Response<NeutronMsg>, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender)?;
     let contract_balance = deps
@@ -126,16 +126,14 @@ fn execute_withdraw_tokens(
     if amount_to_send > contract_balance {
         return Err(ContractError::InsufficientFunds);
     }
-    if recepient.is_none() {
-        recepient = Some(info.sender.to_string());
-    }
+    let recepient_to_send = recepient.unwrap_or(info.sender.to_string());
     Ok(response(
         "execute-withdraw-tokens",
         CONTRACT_NAME,
         Vec::<Attribute>::new(),
     )
     .add_message(CosmosMsg::Bank(BankMsg::Send {
-        to_address: recepient.unwrap(),
+        to_address: recepient_to_send,
         amount: vec![Coin {
             denom: UNTRN_DENOM.to_string(),
             amount: amount_to_send,

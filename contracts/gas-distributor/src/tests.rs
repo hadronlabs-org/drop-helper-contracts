@@ -450,7 +450,6 @@ fn test_execute_add_target_balances() {
             None,
             cosmwasm_std::Order::Ascending,
         )
-        .into_iter()
         .map(
             |target_balance: Result<
                 (String, TargetBalanceUpdateParams),

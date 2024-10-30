@@ -53,12 +53,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
     Ok(match msg {
         QueryMsg::TargetBalances {} => query_target_balances(deps)?,
         QueryMsg::TargetBalance { address } => query_target_balance(deps, address)?,
-        QueryMsg::Ownership {} => to_json_binary(
-            &cw_ownable::get_ownership(deps.storage)?
-                .owner
-                .unwrap_or(Addr::unchecked(""))
-                .to_string(),
-        )?,
+        QueryMsg::Ownership {} => to_json_binary(&cw_ownable::get_ownership(deps.storage)?.owner)?,
     })
 }
 

@@ -24,6 +24,8 @@ pub fn instantiate(
     if msg.owner.is_none() {
         cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
     } else {
+        deps.api
+            .addr_validate(msg.owner.clone().unwrap().as_str())?;
         cw_ownable::initialize_owner(deps.storage, deps.api, Some(msg.owner.unwrap().as_str()))?;
     }
     msg.initial_target_balances

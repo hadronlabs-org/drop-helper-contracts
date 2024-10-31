@@ -61,8 +61,8 @@ fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {
     Ok(to_json_binary(
         &TARGET_BALANCES
             .range(deps.storage, None, None, Order::Ascending)
-            .map(|res| res.map(|(_key, value)| value).unwrap())
-            .collect::<Vec<TargetBalance>>(),
+            .map(|res| res.map(|(_key, value)| value))
+            .collect::<StdResult<Vec<_>>>()?,
     )?)
 }
 

@@ -162,8 +162,6 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
                 }));
                 contract_balance = contract_balance.abs_diff(funds_to_send);
                 attrs.push(attr(target_balance.address.to_string(), funds_to_send));
-            } else {
-                break;
             }
         }
     }

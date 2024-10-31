@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     attr, ensure, entry_point, to_json_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg,
-    Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Uint128,
+    Deps, DepsMut, Env, MessageInfo, Response, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
@@ -26,18 +26,14 @@ pub fn instantiate(
         .api
         .addr_validate(msg.owner.unwrap_or(info.sender).as_str())?;
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(owner.as_str()))?;
-    for target_balance in msg.initial_target_balances {
+    for target_balance in msg.initial_target_balances.clone() {
         deps.api.addr_validate(target_balance.address.as_str())?;
-        TARGET_BALANCES.save(
-            deps.storage,
-            target_balance.address.to_string(),
-            &target_balance,
-        )?;
         attrs.push(attr(
             "add-target-balance",
             target_balance.address.to_string(),
         ));
     }
+    TARGET_BALANCES.save(deps.storage, &msg.initial_target_balances)?;
     Ok(response("instantiate", CONTRACT_NAME, attrs))
 }
 
@@ -51,19 +47,16 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
 }
 
 fn query_target_balance(deps: Deps, address: Addr) -> Result<Binary, ContractError> {
-    match TARGET_BALANCES.load(deps.storage, address.to_string()) {
-        Ok(value) => Ok(to_json_binary(&value).unwrap()),
-        Err(_) => Err(ContractError::UnknownTargetBalance {}),
+    for target_balance in TARGET_BALANCES.load(deps.storage)? {
+        if target_balance.address == address {
+            return Ok(to_json_binary(&target_balance)?);
+        }
     }
+    Err(ContractError::UnknownTargetBalance {})
 }
 
 fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {
-    Ok(to_json_binary(
-        &TARGET_BALANCES
-            .range(deps.storage, None, None, Order::Ascending)
-            .map(|res| res.map(|(_key, value)| value))
-            .collect::<StdResult<Vec<_>>>()?,
-    )?)
+    Ok(to_json_binary(&TARGET_BALANCES.load(deps.storage)?)?)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -83,11 +76,8 @@ pub fn execute(
             ))
         }
         ExecuteMsg::Distribute {} => execute_distribute(env, deps),
-        ExecuteMsg::AddTargetBalances { target_balances } => {
-            execute_add_target_balances(deps, info, target_balances)
-        }
-        ExecuteMsg::RemoveTargetBalances { target_balances } => {
-            execute_remove_target_balances(deps, info, target_balances)
+        ExecuteMsg::SetTargetBalances { target_balances } => {
+            execute_set_target_balances(deps, info, target_balances)
         }
         ExecuteMsg::WithdrawTokens { recepient, amount } => {
             execute_withdraw_tokens(deps, info, env, amount, recepient)
@@ -127,46 +117,20 @@ fn execute_withdraw_tokens(
     })))
 }
 
-fn execute_add_target_balances(
+fn execute_set_target_balances(
     deps: DepsMut,
     info: MessageInfo,
     target_balances: Vec<TargetBalance>,
 ) -> Result<Response<NeutronMsg>, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender)?;
     let mut attrs = vec![];
-    for target_balance in target_balances {
+    for target_balance in target_balances.clone() {
         deps.api.addr_validate(target_balance.address.as_str())?;
-        TARGET_BALANCES.save(
-            deps.storage,
-            target_balance.address.to_string(),
-            &target_balance,
-        )?;
-        attrs.push(attr("add-target-balance", target_balance.address));
+        attrs.push(attr("set-target-balance", target_balance.address));
     }
+    TARGET_BALANCES.save(deps.storage, &target_balances)?;
     Ok(response(
-        "execute-add-target-balances",
-        CONTRACT_NAME,
-        attrs,
-    ))
-}
-
-fn execute_remove_target_balances(
-    deps: DepsMut,
-    info: MessageInfo,
-    target_balances: Vec<Addr>,
-) -> Result<Response<NeutronMsg>, ContractError> {
-    cw_ownable::assert_owner(deps.storage, &info.sender)?;
-    let mut attrs = vec![];
-    for addr in target_balances {
-        if TARGET_BALANCES.has(deps.storage, addr.to_string()) {
-            TARGET_BALANCES.remove(deps.storage, addr.to_string());
-            attrs.push(attr("remove-target-balance", addr.to_string()));
-        } else {
-            return Err(ContractError::UnknownTargetBalance {});
-        }
-    }
-    Ok(response(
-        "execute-remove-target-balances",
+        "execute-set-target-balances",
         CONTRACT_NAME,
         attrs,
     ))
@@ -179,26 +143,24 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
         .querier
         .query_balance(env.contract.address, UNTRN_DENOM.to_string())?
         .amount;
-
-    for item in TARGET_BALANCES.range(deps.storage, None, None, Order::Ascending) {
-        let (address, target_balance) = item?;
+    for target_balance in TARGET_BALANCES.load(deps.storage)? {
         let current_balance = deps
             .querier
-            .query_balance(address.clone(), UNTRN_DENOM.to_string())?
+            .query_balance(target_balance.address.clone(), UNTRN_DENOM.to_string())?
             .amount;
         if current_balance < target_balance.update_options.target_balance {
             let abs_delta = current_balance.abs_diff(target_balance.update_options.target_balance);
             let funds_to_send = abs_delta + target_balance.update_options.update_value;
             if contract_balance.checked_sub(funds_to_send).is_ok() {
                 messages.push(CosmosMsg::Bank(BankMsg::Send {
-                    to_address: address.clone(),
+                    to_address: target_balance.address.to_string(),
                     amount: vec![Coin {
                         denom: UNTRN_DENOM.to_string(),
                         amount: funds_to_send,
                     }],
                 }));
                 contract_balance = contract_balance.abs_diff(funds_to_send);
-                attrs.push(attr(address, funds_to_send));
+                attrs.push(attr(target_balance.address.to_string(), funds_to_send));
             } else {
                 break;
             }

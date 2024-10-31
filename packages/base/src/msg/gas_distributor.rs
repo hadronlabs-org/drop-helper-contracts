@@ -41,10 +41,7 @@ pub enum ExecuteMsg {
         recepient: Option<String>,
         amount: Option<Uint128>,
     },
-    AddTargetBalances {
+    SetTargetBalances {
         target_balances: Vec<TargetBalance>,
-    },
-    RemoveTargetBalances {
-        target_balances: Vec<Addr>,
     },
 }

@@ -115,14 +115,14 @@ fn execute_withdraw_tokens(
         amount_to_send <= contract_balance,
         ContractError::InsufficientFunds
     );
-    let recepient_to_send = recepient.unwrap_or(info.sender.to_string());
+    let recepient = recepient.unwrap_or(info.sender.to_string());
     Ok(response(
         "execute-withdraw-tokens",
         CONTRACT_NAME,
         Vec::<Attribute>::new(),
     )
     .add_message(CosmosMsg::Bank(BankMsg::Send {
-        to_address: recepient_to_send,
+        to_address: recepient,
         amount: vec![Coin {
             denom: UNTRN_DENOM.to_string(),
             amount: amount_to_send,

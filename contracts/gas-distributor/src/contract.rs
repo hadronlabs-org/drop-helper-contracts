@@ -26,24 +26,18 @@ pub fn instantiate(
         .api
         .addr_validate(msg.owner.unwrap_or(info.sender).as_str())?;
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(owner.as_str()))?;
-    msg.initial_target_balances
-        .iter()
-        .for_each(|target_balance: &TargetBalance| {
-            deps.api
-                .addr_validate(target_balance.address.as_str())
-                .unwrap();
-            TARGET_BALANCES
-                .save(
-                    deps.storage,
-                    target_balance.address.to_string(),
-                    target_balance,
-                )
-                .unwrap();
-            attrs.push(attr(
-                "add-target-balance",
-                target_balance.address.to_string(),
-            ));
-        });
+    for target_balance in msg.initial_target_balances {
+        deps.api.addr_validate(target_balance.address.as_str())?;
+        TARGET_BALANCES.save(
+            deps.storage,
+            target_balance.address.to_string(),
+            &target_balance,
+        )?;
+        attrs.push(attr(
+            "add-target-balance",
+            target_balance.address.to_string(),
+        ));
+    }
     Ok(response("instantiate", CONTRACT_NAME, attrs))
 }
 
@@ -144,19 +138,15 @@ fn execute_add_target_balances(
 ) -> Result<Response<NeutronMsg>, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender)?;
     let mut attrs = vec![];
-    target_balances.into_iter().for_each(|target_balance| {
-        deps.api
-            .addr_validate(target_balance.address.as_str())
-            .unwrap();
-        TARGET_BALANCES
-            .save(
-                deps.storage,
-                target_balance.address.to_string(),
-                &target_balance,
-            )
-            .unwrap();
+    for target_balance in target_balances {
+        deps.api.addr_validate(target_balance.address.as_str())?;
+        TARGET_BALANCES.save(
+            deps.storage,
+            target_balance.address.to_string(),
+            &target_balance,
+        )?;
         attrs.push(attr("add-target-balance", target_balance.address));
-    });
+    }
     Ok(response(
         "execute-add-target-balances",
         CONTRACT_NAME,

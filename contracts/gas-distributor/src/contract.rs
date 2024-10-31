@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     attr, ensure, entry_point, to_json_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg,
-    Deps, DepsMut, Env, MessageInfo, Response, Uint128,
+    Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
@@ -128,12 +128,10 @@ fn execute_set_target_balances(
         .clone()
         .into_iter()
         .map(|target_balance| {
-            deps.api
-                .addr_validate(target_balance.address.as_str())
-                .unwrap();
-            attr("set-target-balance", target_balance.address)
+            deps.api.addr_validate(target_balance.address.as_str())?;
+            Ok(attr("set-target-balance", target_balance.address))
         })
-        .collect::<Vec<_>>();
+        .collect::<StdResult<Vec<_>>>()?;
     TARGET_BALANCES.save(deps.storage, &target_balances)?;
     Ok(response(
         "execute-set-target-balances",

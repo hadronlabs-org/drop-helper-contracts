@@ -47,12 +47,13 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
 }
 
 fn query_target_balance(deps: Deps, address: Addr) -> Result<Binary, ContractError> {
-    for target_balance in TARGET_BALANCES.load(deps.storage)? {
-        if target_balance.address == address {
-            return Ok(to_json_binary(&target_balance)?);
-        }
-    }
-    Err(ContractError::UnknownTargetBalance {})
+    Ok(to_json_binary(
+        &TARGET_BALANCES
+            .load(deps.storage)?
+            .into_iter()
+            .find(|target_balance| target_balance.address == address)
+            .ok_or(ContractError::UnknownTargetBalance)?,
+    )?)
 }
 
 fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {

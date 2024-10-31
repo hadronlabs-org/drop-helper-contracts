@@ -124,11 +124,16 @@ fn execute_set_target_balances(
     target_balances: Vec<TargetBalance>,
 ) -> Result<Response<NeutronMsg>, ContractError> {
     cw_ownable::assert_owner(deps.storage, &info.sender)?;
-    let mut attrs = vec![];
-    for target_balance in target_balances.clone() {
-        deps.api.addr_validate(target_balance.address.as_str())?;
-        attrs.push(attr("set-target-balance", target_balance.address));
-    }
+    let attrs = target_balances
+        .clone()
+        .into_iter()
+        .map(|target_balance| {
+            deps.api
+                .addr_validate(target_balance.address.as_str())
+                .unwrap();
+            attr("set-target-balance", target_balance.address)
+        })
+        .collect::<Vec<_>>();
     TARGET_BALANCES.save(deps.storage, &target_balances)?;
     Ok(response(
         "execute-set-target-balances",

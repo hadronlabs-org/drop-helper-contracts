@@ -61,10 +61,7 @@ fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {
     Ok(to_json_binary(
         &TARGET_BALANCES
             .range(deps.storage, None, None, Order::Ascending)
-            .map(|item: StdResult<(String, TargetBalance)>| {
-                let (_, target_balance) = item.unwrap();
-                target_balance
-            })
+            .map(|res| res.map(|(_key, value)| value).unwrap())
             .collect::<Vec<TargetBalance>>(),
     )?)
 }

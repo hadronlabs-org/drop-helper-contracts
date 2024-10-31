@@ -27,14 +27,14 @@ fn test_instantiate_general() {
                     address: Addr::unchecked("address1"),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(123_u64),
-                        update_value: Some(Uint128::from(2000_u64)),
+                        update_value: Uint128::from(2000_u64),
                     },
                 },
                 TargetBalance {
                     address: Addr::unchecked("address2"),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(321_u64),
-                        update_value: Some(Uint128::from(1000_u64)),
+                        update_value: Uint128::from(1000_u64),
                     },
                 },
             ],
@@ -71,14 +71,14 @@ fn test_instantiate_general() {
                 address: Addr::unchecked("address1"),
                 update_options: TargetBalanceUpdateParams {
                     target_balance: Uint128::from(123_u64),
-                    update_value: Some(Uint128::from(2000_u64)),
+                    update_value: Uint128::from(2000_u64),
                 }
             },
             TargetBalance {
                 address: Addr::unchecked("address2"),
                 update_options: TargetBalanceUpdateParams {
                     target_balance: Uint128::from(321_u64),
-                    update_value: Some(Uint128::from(1000_u64)),
+                    update_value: Uint128::from(1000_u64),
                 }
             }
         ]
@@ -99,14 +99,14 @@ fn test_instantiate_custom_owner() {
                     address: Addr::unchecked("address1"),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(123_u64),
-                        update_value: Some(Uint128::from(2000_u64)),
+                        update_value: Uint128::from(2000_u64),
                     },
                 },
                 TargetBalance {
                     address: Addr::unchecked("address2"),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(321_u64),
-                        update_value: Some(Uint128::from(1000_u64)),
+                        update_value: Uint128::from(1000_u64),
                     },
                 },
             ],
@@ -151,14 +151,14 @@ fn test_instantiate_sender_owner() {
                     address: Addr::unchecked("address1"),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(123_u64),
-                        update_value: Some(Uint128::from(2000_u64)),
+                        update_value: Uint128::from(2000_u64),
                     },
                 },
                 TargetBalance {
                     address: Addr::unchecked("address2"),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(321_u64),
-                        update_value: Some(Uint128::from(1000_u64)),
+                        update_value: Uint128::from(1000_u64),
                     },
                 },
             ],
@@ -216,7 +216,7 @@ fn test_query_target_balance() {
         address: Addr::unchecked("address"),
         update_options: TargetBalanceUpdateParams {
             target_balance: Uint128::from(123_u64),
-            update_value: Some(Uint128::from(2000_u64)),
+            update_value: Uint128::from(2000_u64),
         },
     };
     TARGET_BALANCES
@@ -267,14 +267,14 @@ fn test_query_target_balances() {
             address: Addr::unchecked("address1"),
             update_options: TargetBalanceUpdateParams {
                 target_balance: Uint128::from(123_u64),
-                update_value: Some(Uint128::from(2000_u64)),
+                update_value: Uint128::from(2000_u64),
             },
         },
         TargetBalance {
             address: Addr::unchecked("address2"),
             update_options: TargetBalanceUpdateParams {
                 target_balance: Uint128::from(321_u64),
-                update_value: Some(Uint128::from(1000_u64)),
+                update_value: Uint128::from(1000_u64),
             },
         },
     ];
@@ -353,7 +353,7 @@ fn test_execute_remove_target_balances_not_exist() {
         address: Addr::unchecked("address1"),
         update_options: TargetBalanceUpdateParams {
             target_balance: Uint128::from(123_u64),
-            update_value: Some(Uint128::from(2000_u64)),
+            update_value: Uint128::from(2000_u64),
         },
     };
     TARGET_BALANCES
@@ -382,7 +382,7 @@ fn test_execute_remove_target_balances() {
     cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
     let expected_params = TargetBalanceUpdateParams {
         target_balance: Uint128::from(123_u64),
-        update_value: Some(Uint128::from(2000_u64)),
+        update_value: Uint128::from(2000_u64),
     };
     TARGET_BALANCES
         .save(
@@ -443,14 +443,14 @@ fn test_execute_add_target_balances() {
             address: Addr::unchecked("address1"),
             update_options: TargetBalanceUpdateParams {
                 target_balance: Uint128::from(123_u64),
-                update_value: Some(Uint128::from(2000_u64)),
+                update_value: Uint128::from(2000_u64),
             },
         },
         TargetBalance {
             address: Addr::unchecked("address2"),
             update_options: TargetBalanceUpdateParams {
                 target_balance: Uint128::from(321_u64),
-                update_value: Some(Uint128::from(1000_u64)),
+                update_value: Uint128::from(1000_u64),
             },
         },
     ];
@@ -651,7 +651,7 @@ fn test_distribute_2_addresses() {
     }]);
     let expected_params = TargetBalanceUpdateParams {
         target_balance: Uint128::from(100_u64),
-        update_value: Some(Uint128::from(10_u64)),
+        update_value: Uint128::from(10_u64),
     };
     TARGET_BALANCES
         .save(
@@ -734,7 +734,7 @@ fn test_distribute_1_address() {
     }]);
     let expected_params = TargetBalanceUpdateParams {
         target_balance: Uint128::from(100_u64),
-        update_value: Some(Uint128::from(10_u64)),
+        update_value: Uint128::from(10_u64),
     };
     TARGET_BALANCES
         .save(
@@ -803,7 +803,7 @@ fn test_distribute_nobody() {
     }]);
     let expected_params = TargetBalanceUpdateParams {
         target_balance: Uint128::from(100_u64),
-        update_value: Some(Uint128::from(10_u64)),
+        update_value: Uint128::from(10_u64),
     };
     TARGET_BALANCES
         .save(

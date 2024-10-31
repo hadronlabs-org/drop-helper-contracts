@@ -5,7 +5,7 @@ use cw_ownable::cw_ownable_execute;
 #[cw_serde]
 pub struct TargetBalanceUpdateParams {
     pub target_balance: Uint128,
-    pub update_value: Option<Uint128>,
+    pub update_value: Uint128,
 }
 
 #[cw_serde]

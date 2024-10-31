@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     attr, entry_point, to_json_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps,
-    DepsMut, Env, MessageInfo, Order, Response, Uint128,
+    DepsMut, Env, MessageInfo, Order, Response, StdResult, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
@@ -61,12 +61,10 @@ fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {
     Ok(to_json_binary(
         &TARGET_BALANCES
             .range(deps.storage, None, None, Order::Ascending)
-            .map(
-                |item: Result<(String, TargetBalance), cosmwasm_std::StdError>| {
-                    let (_, target_balance) = item.unwrap();
-                    target_balance
-                },
-            )
+            .map(|item: StdResult<(String, TargetBalance)>| {
+                let (_, target_balance) = item.unwrap();
+                target_balance
+            })
             .collect::<Vec<TargetBalance>>(),
     )?)
 }

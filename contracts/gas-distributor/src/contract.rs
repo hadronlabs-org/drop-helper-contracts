@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    attr, entry_point, to_json_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg, Deps,
-    DepsMut, Env, MessageInfo, Order, Response, StdResult, Uint128,
+    attr, ensure, entry_point, to_json_binary, Addr, Attribute, BankMsg, Binary, Coin, CosmosMsg,
+    Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Uint128,
 };
 use drop_helper_contracts_base::{
     error::gas_distributor::ContractError,
@@ -111,9 +111,10 @@ fn execute_withdraw_tokens(
         .query_balance(env.contract.address, UNTRN_DENOM.to_string())?
         .amount;
     let amount_to_send = amount.unwrap_or(contract_balance);
-    if amount_to_send > contract_balance {
-        return Err(ContractError::InsufficientFunds);
-    }
+    ensure!(
+        amount_to_send <= contract_balance,
+        ContractError::InsufficientFunds
+    );
     let recepient_to_send = recepient.unwrap_or(info.sender.to_string());
     Ok(response(
         "execute-withdraw-tokens",

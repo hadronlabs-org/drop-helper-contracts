@@ -24,8 +24,7 @@ pub fn instantiate(
     cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION).unwrap();
     let owner = deps
         .api
-        .addr_validate(msg.owner.unwrap_or(info.sender).as_str())
-        .unwrap();
+        .addr_validate(msg.owner.unwrap_or(info.sender).as_str())?;
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(owner.as_str()))?;
     msg.initial_target_balances
         .iter()
@@ -75,8 +74,7 @@ fn query_target_balances(deps: Deps) -> Result<Binary, ContractError> {
                 },
             )
             .collect::<Vec<TargetBalance>>(),
-    )
-    .unwrap())
+    )?)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -118,8 +116,7 @@ fn execute_withdraw_tokens(
     cw_ownable::assert_owner(deps.storage, &info.sender)?;
     let contract_balance = deps
         .querier
-        .query_balance(env.contract.address, UNTRN_DENOM.to_string())
-        .unwrap()
+        .query_balance(env.contract.address, UNTRN_DENOM.to_string())?
         .amount;
     let amount_to_send = amount.unwrap_or(contract_balance);
     if amount_to_send > contract_balance {
@@ -198,7 +195,7 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
         .amount;
 
     for item in TARGET_BALANCES.range(deps.storage, None, None, Order::Ascending) {
-        let (address, target_balance) = item.unwrap();
+        let (address, target_balance) = item?;
         let current_balance = deps
             .querier
             .query_balance(address.clone(), UNTRN_DENOM.to_string())?

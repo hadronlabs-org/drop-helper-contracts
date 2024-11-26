@@ -393,6 +393,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "drop-lazy-staking"
+version = "1.0.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "drop-helper-contracts-base",
+ "drop-helper-contracts-helpers",
+ "neutron-sdk",
+ "thiserror",
+]
+
+[[package]]
 name = "dyn-clone"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"

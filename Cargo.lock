@@ -396,6 +396,7 @@ dependencies = [
 name = "drop-lazy-staking"
 version = "1.0.0"
 dependencies = [
+ "cosmos-sdk-proto",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-ownable",
@@ -405,6 +406,7 @@ dependencies = [
  "drop-helper-contracts-base",
  "drop-helper-contracts-helpers",
  "neutron-sdk",
+ "semver",
  "thiserror",
 ]
 

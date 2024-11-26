@@ -28,3 +28,5 @@ cw-utils = { workspace = true }
 cw-storage-plus = { workspace = true }
 drop-helper-contracts-base = { workspace = true }
 drop-helper-contracts-helpers = { workspace = true }
+semver = { workspace = true }
+cosmos-sdk-proto = { workspace = true }

@@ -152,9 +152,8 @@ fn execute_distribute(env: Env, deps: DepsMut) -> Result<Response<NeutronMsg>, C
             .querier
             .query_balance(target_balance.address.clone(), UNTRN_DENOM.to_string())?
             .amount;
-        if current_balance < target_balance.update_options.target_balance {
-            let abs_delta = current_balance.abs_diff(target_balance.update_options.target_balance);
-            let funds_to_send = abs_delta + target_balance.update_options.update_value;
+        if current_balance < target_balance.update_options.threshold_balance {
+            let funds_to_send = target_balance.update_options.target_balance - current_balance;
             if contract_balance.checked_sub(funds_to_send).is_ok() {
                 messages.push(CosmosMsg::Bank(BankMsg::Send {
                     to_address: target_balance.address.to_string(),

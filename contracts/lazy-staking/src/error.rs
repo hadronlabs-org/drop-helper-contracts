@@ -1,5 +1,6 @@
 use cosmwasm_std::{OverflowError, StdError};
 use cw_ownable::OwnershipError;
+use cw_utils::PaymentError;
 use neutron_sdk::NeutronError;
 use thiserror::Error;
 
@@ -23,6 +24,8 @@ pub enum ContractError {
     OverflowError(#[from] OverflowError),
     #[error("Unknown reply id {id}")]
     UnknownReplyId { id: u64 },
+    #[error("{0}")]
+    PaymentError(#[from] PaymentError),
 }
 
 impl From<semver::Error> for ContractError {

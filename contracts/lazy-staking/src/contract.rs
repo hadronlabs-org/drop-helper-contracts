@@ -5,7 +5,7 @@ use crate::{
 };
 use cosmos_sdk_proto::cosmos::bank::v1beta1::{DenomUnit, Metadata};
 use cosmwasm_std::{
-    entry_point, to_json_binary, Attribute, Binary, CosmosMsg, Decimal, DenomMetadata, Deps,
+    attr, entry_point, to_json_binary, Attribute, Binary, CosmosMsg, Decimal, DenomMetadata, Deps,
     DepsMut, Env, MessageInfo, Reply, Response, StdResult, SubMsg,
 };
 use drop_helper_contracts_helpers::answer::response;
@@ -29,6 +29,7 @@ pub fn instantiate(
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(info.sender.as_str()))?;
     msg.config.validate_base_denom(deps.as_ref())?;
     msg.config.validate_splitting_targets(deps.as_ref())?;
+    msg.config.validate_factory_addr(deps.as_ref())?;
 
     CONFIG.save(deps.storage, &msg.config)?;
     EXCHANGE_RATE.save(deps.storage, &Decimal::one())?;
@@ -55,6 +56,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
+fn query_core_exchange_rate(deps: Deps) -> ContractResult<Decimal> {
+    let config = CONFIG.load(deps.storage)?;
+    let factory_addr = config.factory_addr;
+    let factory_state = deps.querier.query_wasm_smart(factory_addr).unwrap();
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
@@ -71,7 +78,21 @@ pub fn execute(
                 [],
             ))
         }
+        ExecuteMsg::Bond => execute_bond(deps, info),
     }
+}
+
+fn execute_bond(deps: DepsMut, info: MessageInfo) -> ContractResult<Response<NeutronMsg>> {
+    let config = CONFIG.load(deps.storage)?;
+    let amount = cw_utils::must_pay(&info, &config.base_denom)?;
+    let lazy_denom = DENOM.load(deps.storage)?;
+    let attrs = vec![
+        attr("action", "bond"),
+        attr("amount", amount.to_string()),
+        attr("receiver", info.sender.clone()),
+    ];
+    let msg = NeutronMsg::submit_mint_tokens(lazy_denom, amount, info.sender);
+    Ok(response("execute-bond", CONTRACT_NAME, attrs).add_message(msg))
 }
 
 #[cfg_attr(not(feature = "library"), cosmwasm_std::entry_point)]

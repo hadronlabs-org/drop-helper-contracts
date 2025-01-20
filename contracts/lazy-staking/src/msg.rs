@@ -17,7 +17,9 @@ pub enum QueryMsg {}
 
 #[cw_ownable::cw_ownable_execute]
 #[cw_serde]
-pub enum ExecuteMsg {}
+pub enum ExecuteMsg {
+    Bond,
+}
 
 #[cw_serde]
 pub struct MigrateMsg {}

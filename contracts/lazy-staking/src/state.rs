@@ -11,13 +11,19 @@ pub struct SplittingTarget {
 
 #[cw_serde]
 pub struct Config {
+    pub factory_addr: Addr,
     pub base_denom: String,
     pub splitting_targets: Vec<SplittingTarget>,
 }
 
 impl Config {
-    pub fn new(base_denom: String, splitting_targets: Vec<SplittingTarget>) -> Self {
+    pub fn new(
+        factory_addr: Addr,
+        base_denom: String,
+        splitting_targets: Vec<SplittingTarget>,
+    ) -> Self {
         Self {
+            factory_addr,
             base_denom,
             splitting_targets,
         }
@@ -43,6 +49,13 @@ impl Config {
             if deps.api.addr_validate(target.addr.as_str()).is_err() {
                 return Err(ContractError::InvalidAddressProvided {});
             }
+        }
+        return Ok(());
+    }
+
+    pub fn validate_factory_addr(&self, deps: Deps) -> Result<(), ContractError> {
+        if deps.api.addr_validate(self.factory_addr.as_str()).is_err() {
+            return Err(ContractError::InvalidAddressProvided {});
         }
         return Ok(());
     }

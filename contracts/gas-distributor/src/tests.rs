@@ -24,14 +24,14 @@ fn test_instantiate_general() {
             owner: None,
             initial_target_balances: vec![
                 TargetBalance {
-                    address: Addr::unchecked("address1"),
+                    address: "address1".to_string(),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(2000_u64),
                         threshold_balance: Uint128::from(123_u64),
                     },
                 },
                 TargetBalance {
-                    address: Addr::unchecked("address2"),
+                    address: "address2".to_string(),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(1000_u64),
                         threshold_balance: Uint128::from(321_u64),
@@ -68,14 +68,14 @@ fn test_instantiate_general() {
         res,
         vec![
             TargetBalance {
-                address: Addr::unchecked("address1"),
+                address: "address1".to_string(),
                 update_options: TargetBalanceUpdateParams {
                     target_balance: Uint128::from(2000_u64),
                     threshold_balance: Uint128::from(123_u64),
                 }
             },
             TargetBalance {
-                address: Addr::unchecked("address2"),
+                address: "address2".to_string(),
                 update_options: TargetBalanceUpdateParams {
                     target_balance: Uint128::from(1000_u64),
                     threshold_balance: Uint128::from(321_u64),
@@ -96,14 +96,14 @@ fn test_instantiate_custom_owner() {
             owner: Some(Addr::unchecked("owner")),
             initial_target_balances: vec![
                 TargetBalance {
-                    address: Addr::unchecked("address1"),
+                    address: "address1".to_string(),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(2000_u64),
                         threshold_balance: Uint128::from(123_u64),
                     },
                 },
                 TargetBalance {
-                    address: Addr::unchecked("address2"),
+                    address: "address2".to_string(),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(1000_u64),
                         threshold_balance: Uint128::from(321_u64),
@@ -148,14 +148,14 @@ fn test_instantiate_sender_owner() {
             owner: None,
             initial_target_balances: vec![
                 TargetBalance {
-                    address: Addr::unchecked("address1"),
+                    address: "address1".to_string(),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(2000_u64),
                         threshold_balance: Uint128::from(123_u64),
                     },
                 },
                 TargetBalance {
-                    address: Addr::unchecked("address2"),
+                    address: "address2".to_string(),
                     update_options: TargetBalanceUpdateParams {
                         target_balance: Uint128::from(1000_u64),
                         threshold_balance: Uint128::from(321_u64),
@@ -213,7 +213,7 @@ fn test_query_target_balance() {
     let deps_mut = deps.as_mut();
     cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
     let expected_params = TargetBalance {
-        address: Addr::unchecked("address"),
+        address: "address".to_string(),
         update_options: TargetBalanceUpdateParams {
             target_balance: Uint128::from(2000_u64),
             threshold_balance: Uint128::from(123_u64),
@@ -227,7 +227,7 @@ fn test_query_target_balance() {
             deps.as_ref().into_empty(),
             mock_env(),
             QueryMsg::TargetBalance {
-                address: Addr::unchecked("address"),
+                address: Addr::unchecked("address".to_string()),
             },
         )
         .unwrap(),
@@ -248,7 +248,7 @@ fn test_query_target_balance_not_exist() {
         deps.as_ref().into_empty(),
         mock_env(),
         QueryMsg::TargetBalance {
-            address: Addr::unchecked("address"),
+            address: Addr::unchecked("address".to_string()),
         },
     )
     .unwrap_err();
@@ -263,14 +263,14 @@ fn test_query_target_balances() {
 
     let target_balances = vec![
         TargetBalance {
-            address: Addr::unchecked("address1"),
+            address: "address1".to_string(),
             update_options: TargetBalanceUpdateParams {
                 target_balance: Uint128::from(2000_u64),
                 threshold_balance: Uint128::from(123_u64),
             },
         },
         TargetBalance {
-            address: Addr::unchecked("address2"),
+            address: "address2".to_string(),
             update_options: TargetBalanceUpdateParams {
                 target_balance: Uint128::from(1000_u64),
                 threshold_balance: Uint128::from(321_u64),
@@ -321,14 +321,14 @@ fn test_execute_set_target_balances() {
     cw_ownable::initialize_owner(deps_mut.storage, deps_mut.api, Some("owner")).unwrap();
     let expected_target_balances = vec![
         TargetBalance {
-            address: Addr::unchecked("address1"),
+            address: "address1".to_string(),
             update_options: TargetBalanceUpdateParams {
                 target_balance: Uint128::from(2000_u64),
                 threshold_balance: Uint128::from(123_u64),
             },
         },
         TargetBalance {
-            address: Addr::unchecked("address2"),
+            address: "address2".to_string(),
             update_options: TargetBalanceUpdateParams {
                 target_balance: Uint128::from(1000_u64),
                 threshold_balance: Uint128::from(321_u64),
@@ -526,11 +526,11 @@ fn test_distribute_2_addresses() {
             deps.as_mut().storage,
             &vec![
                 TargetBalance {
-                    address: Addr::unchecked("address1"),
+                    address: "address1".to_string(),
                     update_options: expected_params.clone(),
                 },
                 TargetBalance {
-                    address: Addr::unchecked("address2"),
+                    address: "address2".to_string(),
                     update_options: expected_params,
                 },
             ],
@@ -604,11 +604,11 @@ fn test_distribute_1_address() {
             deps.as_mut().storage,
             &vec![
                 TargetBalance {
-                    address: Addr::unchecked("address1"),
+                    address: "address1".to_string(),
                     update_options: expected_params.clone(),
                 },
                 TargetBalance {
-                    address: Addr::unchecked("address2"),
+                    address: "address2".to_string(),
                     update_options: expected_params,
                 },
             ],
@@ -668,11 +668,11 @@ fn test_distribute_nobody() {
             deps.as_mut().storage,
             &vec![
                 TargetBalance {
-                    address: Addr::unchecked("address1"),
+                    address: "address1".to_string(),
                     update_options: expected_params.clone(),
                 },
                 TargetBalance {
-                    address: Addr::unchecked("address2"),
+                    address: "address2".to_string(),
                     update_options: expected_params,
                 },
             ],

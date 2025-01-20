@@ -33,6 +33,9 @@ pub fn instantiate(
             target_balance.address.to_string(),
         ));
     }
+    msg.initial_target_balances
+        .iter()
+        .for_each(|target_balance| target_balance.validate(deps.as_ref()));
     TARGET_BALANCES.save(deps.storage, &msg.initial_target_balances)?;
     Ok(response("instantiate", CONTRACT_NAME, attrs))
 }
@@ -132,6 +135,9 @@ fn execute_set_target_balances(
             Ok(attr("set-target-balance", target_balance.address))
         })
         .collect::<StdResult<Vec<_>>>()?;
+    target_balances
+        .iter()
+        .for_each(|target_balance| target_balance.validate(deps.as_ref()));
     TARGET_BALANCES.save(deps.storage, &target_balances)?;
     Ok(response(
         "execute-set-target-balances",

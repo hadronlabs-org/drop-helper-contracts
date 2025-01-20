@@ -1,17 +1,24 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Deps, Uint128};
 use cw_ownable::cw_ownable_execute;
 
 #[cw_serde]
 pub struct TargetBalanceUpdateParams {
+    pub threshold_balance: Uint128,
     pub target_balance: Uint128,
-    pub update_value: Uint128,
 }
 
 #[cw_serde]
 pub struct TargetBalance {
-    pub address: Addr,
+    pub address: String,
     pub update_options: TargetBalanceUpdateParams,
+}
+
+impl TargetBalance {
+    pub fn validate(&self, deps: Deps) {
+        deps.api.addr_validate(&self.address).unwrap();
+        assert!(self.update_options.threshold_balance < self.update_options.target_balance)
+    }
 }
 
 #[cw_serde]

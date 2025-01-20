@@ -12,21 +12,21 @@ This contract's purpose is to sustain balances on provided neutron addresses (IC
 
 **Permissionless**: Yes
 
-#### `add_target_balances`
+#### `set_target_balances`
 
-**Description**: Method's purpose is to add new target balances in order to make it part of upcoming `distribution` call. If target's real balance is 100 untrn and `update_options.target_balance` is 101 untrn, then it sends delta (of 1 untrn) + `update_options.update_value` to make it exactly 111. Note that balances are strings and counted in untrn
+**Description**: Method's purpose is to set new target balances in order to make it part of upcoming `distribution` call. If target's real balance is 100 untrn and `update_options.threshold_balance` is 101 untrn, then it sends `update_options.target_balance` - `current_balance`. Note that balances are strings and counted in untrn
 
 **Parameters**:
 
 ```json
 {
-    "add_target_balances": {
+    "set_target_balances": {
         "target_balances": [
             {
                 "address": string,
                 "update_options": {
-                    "target_balance": string,
-                    "update_value": string
+                    "threshold_balance": string,
+                    "target_balance": string
                 }
             }
         ]
@@ -35,32 +35,10 @@ This contract's purpose is to sustain balances on provided neutron addresses (IC
 ```
 
 - `add_target_balances.add_target_balances.address`: neutron address where this constract supposed to send tokens.
-- `add_target_balances.add_target_balances.update_options.target_balance`: lower threshold of balance for given neutron address. When it's reached, it sends lacking delta + `add_target_balances.add_target_balances.update_options.update_value`.
-- `add_target_balances.add_target_balances.update_options.update_value` amount of tokens this contract sends when threshold reached.
+- `add_target_balances.add_target_balances.update_options.threshold_balance`: lower threshold of balance for given neutron address. When it's reached, it sends `update_options.target_balance` - `current_balance`
+- `add_target_balances.add_target_balances.update_options.target_balance` amount of tokens this contract should reach on specified target
 
-**Permissionless**: No
-
-#### `remove_target_balances`
-
-**Description**: Method's purpose is opposite to `add_target_balances`. It supposed to remove listed target balances. You only need to provide list of addresses. Make sure every of given addresses exist in current target list (you can make sure of it by doing `target_balance` query).
-
-**Parameters**:
-
-```json
-{
-    "remove_target_balances": {
-        "target_balances": [
-            string,
-            string,
-            string
-        ]
-    }
-}
-```
-
-- `remove_target_balances.target_balances`: list of all target balances to be removed
-
-**Permissionless**: No
+**Permissionless**: Yes
 
 #### `withdraw_tokens`
 
